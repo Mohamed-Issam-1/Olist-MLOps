@@ -5,3 +5,5 @@ pyarrow==25.0.1
 SQLAlchemy==2.0.51
 psycopg2-binary==2.9.12
 ipykernel==7.3.0
+
+pytest==9.1.1

@@ -34,3 +34,6 @@ Thumbs.db
 
 # Runtime logs
 /logs/
+
+# Pytest cache
+.pytest_cache/
