@@ -19,10 +19,8 @@ __pycache__/
 !.env.example
 
 # Generated pipeline artifacts
-/artifacts/
 
 # Raw/local dataset files
-/data/
 
 # OS files
 .DS_Store
@@ -37,3 +35,5 @@ Thumbs.db
 
 # Pytest cache
 .pytest_cache/
+/data
+/artifacts
