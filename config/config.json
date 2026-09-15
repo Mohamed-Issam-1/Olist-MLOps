@@ -32,5 +32,14 @@
     "name": "Olist Late Delivery Inference API",
     "host": "0.0.0.0",
     "port": 8000
+  },
+
+  "mlflow": {
+    "backend_database": "mlflow.db",
+    "artifact_directory": "mlartifacts",
+    "experiment_name": "olist-late-delivery",
+    "registered_model_name": "olist-late-delivery",
+    "model_name": "inference_pipeline",
+    "production_alias": "champion"
   }
 }

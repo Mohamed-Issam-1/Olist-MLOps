@@ -37,3 +37,8 @@ Thumbs.db
 .pytest_cache/
 /data
 /artifacts
+
+# MLflow local state
+/mlflow.db
+/mlruns/
+/mlartifacts/
