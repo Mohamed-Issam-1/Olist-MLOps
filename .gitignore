@@ -1,6 +1,6 @@
 # Python virtual environment
-venv/
-.venv/
+/venv/
+/.venv/
 
 # Python cache
 __pycache__/
@@ -19,10 +19,10 @@ __pycache__/
 !.env.example
 
 # Generated pipeline artifacts
-artifacts/
+/artifacts/
 
 # Raw/local dataset files
-data/
+/data/
 
 # OS files
 .DS_Store
@@ -33,4 +33,4 @@ Thumbs.db
 *.tmp
 
 # Runtime logs
-logs/
+/logs/
