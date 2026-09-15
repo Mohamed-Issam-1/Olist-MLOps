@@ -37,3 +37,16 @@ data_docs_sites:
       class_name: DefaultSiteIndexBuilder
 analytics_enabled: false
 data_context_id: 4860b17f-df4b-4556-897f-d26e6e99670e
+fluent_datasources:
+  olist_runtime_pandas:
+    type: pandas
+    id: fa9df179-47b6-4cd9-a954-e0f537ce94f5
+    assets:
+      olist_labeled_orders:
+        type: dataframe
+        id: 45747eef-271c-4df9-ad77-9d6e4da30f55
+        batch_metadata: {}
+        batch_definitions:
+          whole_dataframe:
+            id: 132a3592-e3e4-4112-9379-45bafc3e692b
+            partitioner:

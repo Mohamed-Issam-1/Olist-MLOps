@@ -1,0 +1,167 @@
+{
+  "labeled_dataset": {
+    "path": "artifacts/02_labeled/labeled_table.parquet",
+
+    "data_source_name": "olist_runtime_pandas",
+    "data_asset_name": "olist_labeled_orders",
+    "batch_definition_name": "whole_dataframe",
+
+    "suite_name": "olist_labeled_data_quality",
+    "validation_definition_name": "olist_labeled_data_quality_validation",
+
+    "row_count": {
+      "min": 90000,
+      "max": 110000
+    },
+
+    "columns": [
+      "order_id",
+      "customer_id",
+      "order_status",
+      "order_purchase_timestamp",
+      "order_approved_at",
+      "order_delivered_carrier_date",
+      "order_delivered_customer_date",
+      "order_estimated_delivery_date",
+      "customer_unique_id",
+      "customer_zip_code_prefix",
+      "customer_city",
+      "customer_state",
+      "customer_lat",
+      "customer_lng",
+      "item_count",
+      "unique_products",
+      "unique_sellers",
+      "total_item_price",
+      "avg_item_price",
+      "total_freight_value",
+      "avg_freight_value",
+      "max_shipping_limit_date",
+      "unique_product_categories",
+      "primary_product_category",
+      "avg_product_weight_g",
+      "max_product_weight_g",
+      "avg_product_length_cm",
+      "avg_product_height_cm",
+      "avg_product_width_cm",
+      "avg_product_photos_qty",
+      "unique_seller_states",
+      "primary_seller_state",
+      "avg_seller_lat",
+      "avg_seller_lng",
+      "payment_records",
+      "payment_types_count",
+      "payment_total",
+      "payment_installments_max",
+      "primary_payment_type",
+      "review_count",
+      "review_score_mean",
+      "review_score_min",
+      "review_score_max",
+      "has_review_comment",
+      "delay_days",
+      "is_late"
+    ],
+
+    "strict_not_null_columns": [
+      "order_id",
+      "customer_id",
+      "order_status",
+      "order_purchase_timestamp",
+      "order_delivered_customer_date",
+      "order_estimated_delivery_date",
+      "customer_state",
+      "item_count",
+      "unique_products",
+      "unique_sellers",
+      "total_item_price",
+      "total_freight_value",
+      "delay_days",
+      "is_late"
+    ],
+
+    "mostly_not_null": {
+      "order_approved_at": 0.999,
+      "order_delivered_carrier_date": 0.9999,
+      "payment_records": 0.9999,
+      "payment_types_count": 0.9999,
+      "payment_total": 0.9999,
+      "payment_installments_max": 0.9999,
+      "primary_payment_type": 0.9999
+    },
+
+    "allowed_order_status": [
+      "delivered"
+    ],
+
+    "allowed_is_late": [
+      0,
+      1
+    ],
+
+    "allowed_customer_states": [
+      "AC",
+      "AL",
+      "AM",
+      "AP",
+      "BA",
+      "CE",
+      "DF",
+      "ES",
+      "GO",
+      "MA",
+      "MG",
+      "MS",
+      "MT",
+      "PA",
+      "PB",
+      "PE",
+      "PI",
+      "PR",
+      "RJ",
+      "RN",
+      "RO",
+      "RR",
+      "RS",
+      "SC",
+      "SE",
+      "SP",
+      "TO"
+    ],
+
+    "numeric_ranges": {
+      "item_count": {
+        "min": 1,
+        "max": 25
+      },
+      "unique_products": {
+        "min": 1,
+        "max": 10
+      },
+      "unique_sellers": {
+        "min": 1,
+        "max": 10
+      },
+      "total_item_price": {
+        "min": 0,
+        "max": 20000
+      },
+      "total_freight_value": {
+        "min": 0,
+        "max": 2500
+      },
+      "payment_total": {
+        "min": 0,
+        "max": 20000
+      },
+      "payment_installments_max": {
+        "min": 0,
+        "max": 30
+      },
+      "delay_days": {
+        "min": -365,
+        "max": 365
+      }
+    }
+  }
+}

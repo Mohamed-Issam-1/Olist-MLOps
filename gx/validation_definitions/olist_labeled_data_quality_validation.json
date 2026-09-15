@@ -1,0 +1,22 @@
+{
+  "data": {
+    "asset": {
+      "id": "45747eef-271c-4df9-ad77-9d6e4da30f55",
+      "name": "olist_labeled_orders"
+    },
+    "batch_definition": {
+      "id": "132a3592-e3e4-4112-9379-45bafc3e692b",
+      "name": "whole_dataframe"
+    },
+    "datasource": {
+      "id": "fa9df179-47b6-4cd9-a954-e0f537ce94f5",
+      "name": "olist_runtime_pandas"
+    }
+  },
+  "id": "d4c5b424-8485-49db-aca9-b4a065a9b4c2",
+  "name": "olist_labeled_data_quality_validation",
+  "suite": {
+    "id": "8b1065e0-e9c6-4267-99eb-ad2f5b7c7334",
+    "name": "olist_labeled_data_quality"
+  }
+}

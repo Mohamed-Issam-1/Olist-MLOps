@@ -1,0 +1,441 @@
+{
+  "expectations": [
+    {
+      "id": "c9da6b3e-8b1a-49c7-8eae-c43373b01e75",
+      "kwargs": {
+        "max_value": 110000,
+        "min_value": 90000
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_table_row_count_to_be_between"
+    },
+    {
+      "id": "3cb11743-2d58-4613-9e0e-141326305cd9",
+      "kwargs": {
+        "value": 46
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_table_column_count_to_equal"
+    },
+    {
+      "id": "09c056c3-6f88-40b6-a38e-dc76baec4ba4",
+      "kwargs": {
+        "column_set": [
+          "order_id",
+          "customer_id",
+          "order_status",
+          "order_purchase_timestamp",
+          "order_approved_at",
+          "order_delivered_carrier_date",
+          "order_delivered_customer_date",
+          "order_estimated_delivery_date",
+          "customer_unique_id",
+          "customer_zip_code_prefix",
+          "customer_city",
+          "customer_state",
+          "customer_lat",
+          "customer_lng",
+          "item_count",
+          "unique_products",
+          "unique_sellers",
+          "total_item_price",
+          "avg_item_price",
+          "total_freight_value",
+          "avg_freight_value",
+          "max_shipping_limit_date",
+          "unique_product_categories",
+          "primary_product_category",
+          "avg_product_weight_g",
+          "max_product_weight_g",
+          "avg_product_length_cm",
+          "avg_product_height_cm",
+          "avg_product_width_cm",
+          "avg_product_photos_qty",
+          "unique_seller_states",
+          "primary_seller_state",
+          "avg_seller_lat",
+          "avg_seller_lng",
+          "payment_records",
+          "payment_types_count",
+          "payment_total",
+          "payment_installments_max",
+          "primary_payment_type",
+          "review_count",
+          "review_score_mean",
+          "review_score_min",
+          "review_score_max",
+          "has_review_comment",
+          "delay_days",
+          "is_late"
+        ]
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_table_columns_to_match_set"
+    },
+    {
+      "id": "31653ee3-c373-4b8f-973f-bbfd9ee3ffb2",
+      "kwargs": {
+        "column": "order_id"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "d9d739ac-d886-4ebe-a15f-139cdade39cf",
+      "kwargs": {
+        "column": "order_id"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_be_unique"
+    },
+    {
+      "id": "7868cb5a-c726-4f77-acf6-d3c5897a6bd7",
+      "kwargs": {
+        "column": "customer_id"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "028679f1-3dc0-47b3-8f04-017b57e9f089",
+      "kwargs": {
+        "column": "order_status"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "ce0ca9b4-0841-437b-a73b-17ad94be3cb9",
+      "kwargs": {
+        "column": "order_purchase_timestamp"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "4e0c1d5e-c128-458b-be79-b9fd180e9a61",
+      "kwargs": {
+        "column": "order_delivered_customer_date"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "ac6cdb76-c2a1-4e25-a5c4-c4df31daec37",
+      "kwargs": {
+        "column": "order_estimated_delivery_date"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "a806e718-691b-4a21-b8c5-86b371558677",
+      "kwargs": {
+        "column": "customer_state"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "42837672-b684-498c-9564-2dd825b3d2f9",
+      "kwargs": {
+        "column": "item_count"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "52eeafd6-cb48-4616-a7ff-5276b36139eb",
+      "kwargs": {
+        "column": "unique_products"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "bb6a0ddf-730f-4c4a-9939-d315e7a10eb8",
+      "kwargs": {
+        "column": "unique_sellers"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "727ff294-f213-44f5-93e7-e613a99feac5",
+      "kwargs": {
+        "column": "total_item_price"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "ff819f2b-c87e-478f-9af1-fdd44e36adee",
+      "kwargs": {
+        "column": "total_freight_value"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "2339fac7-ae10-4c07-be29-54b817a018d7",
+      "kwargs": {
+        "column": "delay_days"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "74d98df8-3f5b-43ff-8caf-f24ca330d3da",
+      "kwargs": {
+        "column": "is_late"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "532e7a06-f2ec-4f41-9e51-7511907c2fbc",
+      "kwargs": {
+        "column": "order_approved_at",
+        "mostly": 0.999
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "b3c331a8-159c-414f-b4f5-624780615bb2",
+      "kwargs": {
+        "column": "order_delivered_carrier_date",
+        "mostly": 0.9999
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "14324674-e3a7-4ed5-86e7-b9684075a816",
+      "kwargs": {
+        "column": "payment_records",
+        "mostly": 0.9999
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "861d3914-6529-4675-8a6b-f7a9f87c8bf2",
+      "kwargs": {
+        "column": "payment_types_count",
+        "mostly": 0.9999
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "640084be-0e84-4d8b-ada0-884ebad7b28a",
+      "kwargs": {
+        "column": "payment_total",
+        "mostly": 0.9999
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "0b66caac-409c-4e91-92d2-77053840e093",
+      "kwargs": {
+        "column": "payment_installments_max",
+        "mostly": 0.9999
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "0dd51a55-6652-4580-b1a2-3e743fe069c2",
+      "kwargs": {
+        "column": "primary_payment_type",
+        "mostly": 0.9999
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "8509e275-2db0-450a-aeac-30184095b316",
+      "kwargs": {
+        "column": "order_status",
+        "value_set": [
+          "delivered"
+        ]
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_be_in_set"
+    },
+    {
+      "id": "c233d442-4289-4f0d-b4de-330c4fbab1ca",
+      "kwargs": {
+        "column": "is_late",
+        "value_set": [
+          0,
+          1
+        ]
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_be_in_set"
+    },
+    {
+      "id": "4ba97b66-37d4-4199-90a3-4bc6be64f5ed",
+      "kwargs": {
+        "column": "customer_state",
+        "value_set": [
+          "AC",
+          "AL",
+          "AM",
+          "AP",
+          "BA",
+          "CE",
+          "DF",
+          "ES",
+          "GO",
+          "MA",
+          "MG",
+          "MS",
+          "MT",
+          "PA",
+          "PB",
+          "PE",
+          "PI",
+          "PR",
+          "RJ",
+          "RN",
+          "RO",
+          "RR",
+          "RS",
+          "SC",
+          "SE",
+          "SP",
+          "TO"
+        ]
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_be_in_set"
+    },
+    {
+      "id": "5a52b882-de4d-4bca-8982-766ce7e51d50",
+      "kwargs": {
+        "column": "item_count",
+        "max_value": 25.0,
+        "min_value": 1.0
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_be_between"
+    },
+    {
+      "id": "bc1456ea-b01b-4ff1-9f0f-4291fd53170b",
+      "kwargs": {
+        "column": "unique_products",
+        "max_value": 10.0,
+        "min_value": 1.0
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_be_between"
+    },
+    {
+      "id": "af853543-0eaa-43f8-b40b-250de8cb8ae7",
+      "kwargs": {
+        "column": "unique_sellers",
+        "max_value": 10.0,
+        "min_value": 1.0
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_be_between"
+    },
+    {
+      "id": "0ccc0294-4e17-4376-923a-11121ecfeecb",
+      "kwargs": {
+        "column": "total_item_price",
+        "max_value": 20000.0,
+        "min_value": 0.0
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_be_between"
+    },
+    {
+      "id": "64fa0978-b975-4098-b947-79eadf00d5f7",
+      "kwargs": {
+        "column": "total_freight_value",
+        "max_value": 2500.0,
+        "min_value": 0.0
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_be_between"
+    },
+    {
+      "id": "e48fe645-9c49-4080-867b-caa2520f433f",
+      "kwargs": {
+        "column": "payment_total",
+        "max_value": 20000.0,
+        "min_value": 0.0
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_be_between"
+    },
+    {
+      "id": "2912dce1-c57a-4e12-b233-7fa42874f6cb",
+      "kwargs": {
+        "column": "payment_installments_max",
+        "max_value": 30.0,
+        "min_value": 0.0
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_be_between"
+    },
+    {
+      "id": "0f21c94e-447d-4fcb-a742-16fb55af9832",
+      "kwargs": {
+        "column": "delay_days",
+        "max_value": 365.0,
+        "min_value": -365.0
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_be_between"
+    }
+  ],
+  "id": "8b1065e0-e9c6-4267-99eb-ad2f5b7c7334",
+  "meta": {
+    "great_expectations_version": "1.23.0"
+  },
+  "name": "olist_labeled_data_quality",
+  "notes": null
+}
