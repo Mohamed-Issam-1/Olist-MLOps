@@ -5,6 +5,8 @@ import pytest
 
 import olist_ml.mlflow_config as mlflow_config
 
+from olist_ml.mlflow_config import MlflowSettings
+
 
 def test_load_mlflow_settings():
     settings = (
@@ -163,4 +165,42 @@ def test_configure_mlflow_sets_tracking_and_registry(
         settings
         .artifact_directory
         .is_dir()
+    )
+
+def test_tracking_uri_preserves_parentheses(
+    tmp_path,
+):
+    special_directory = (
+        tmp_path
+        / "(01)04"
+    )
+
+    settings = MlflowSettings(
+        backend_database=(
+            special_directory
+            / "mlflow.db"
+        ),
+        artifact_directory=(
+            tmp_path
+            / "mlartifacts"
+        ),
+        experiment_name="test-experiment",
+        registered_model_name="test-model",
+        model_name="test-pipeline",
+        production_alias="champion",
+    )
+
+    assert (
+        "(01)04"
+        in settings.tracking_uri
+    )
+
+    assert (
+        "%28"
+        not in settings.tracking_uri
+    )
+
+    assert (
+        "%29"
+        not in settings.tracking_uri
     )

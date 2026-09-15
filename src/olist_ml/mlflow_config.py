@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
-from urllib.parse import quote
 
 import mlflow
 
@@ -37,13 +36,8 @@ class MlflowSettings:
             .as_posix()
         )
 
-        encoded_path = quote(
-            path,
-            safe="/:",
-        )
-
         return (
-            f"sqlite:///{encoded_path}"
+            f"sqlite:///{path}"
         )
 
     @property
