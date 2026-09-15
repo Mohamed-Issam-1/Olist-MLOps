@@ -1,0 +1,31 @@
+{
+  "project": {
+    "name": "olist-late-delivery",
+    "environment": "development"
+  },
+
+  "artifacts": {
+    "preprocessor": "artifacts/05_features/preprocessor.joblib",
+    "feature_names": "artifacts/05_features/feature_names.json",
+    "feature_config": "artifacts/05_features/feature_config.json",
+    "model_bundle": "artifacts/06_model/model_bundle.joblib"
+  },
+
+  "inference": {
+    "positive_class": 1,
+    "negative_class": 0
+  },
+
+  "logging": {
+    "level": "INFO",
+    "directory": "logs",
+    "application_log": "application.log",
+    "prediction_log": "predictions.jsonl"
+  },
+
+  "service": {
+    "name": "Olist Late Delivery Inference API",
+    "host": "0.0.0.0",
+    "port": 8000
+  }
+}
