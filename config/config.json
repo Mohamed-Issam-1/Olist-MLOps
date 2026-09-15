@@ -4,6 +4,11 @@
     "environment": "development"
   },
 
+  "model": {
+    "source": "local-task2-artifact",
+    "version": "task2-baseline-6394cf2"
+  },
+
   "artifacts": {
     "preprocessor": "artifacts/05_features/preprocessor.joblib",
     "feature_names": "artifacts/05_features/feature_names.json",

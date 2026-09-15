@@ -10,6 +10,7 @@ CONFIG_RELATIVE_PATH = Path("config") / "config.json"
 
 REQUIRED_CONFIG_SECTIONS = {
     "project",
+    "model",
     "artifacts",
     "inference",
     "logging",
