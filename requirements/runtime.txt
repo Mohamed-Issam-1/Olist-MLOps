@@ -3,3 +3,5 @@ numpy==2.5.2
 joblib==1.5.3
 scipy==1.18.1
 scikit-learn==1.9.0
+
+mlflow-skinny==3.16.0
