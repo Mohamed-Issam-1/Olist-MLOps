@@ -239,3 +239,54 @@ class PredictionResponse(
             "Resolved MLflow Registry model version."
         )
     )
+
+
+class BatchPredictionRequest(
+    BaseModel
+):
+    """
+    One or more orders submitted for batch inference.
+
+    The maximum accepted batch size is controlled by
+    service.max_batch_size in the project configuration.
+    """
+
+    model_config = ConfigDict(
+        extra="forbid"
+    )
+
+    orders: list[
+        OrderPredictionRequest
+    ] = Field(
+        min_length=1,
+        description=(
+            "Orders to score in one inference request."
+        ),
+    )
+
+
+class BatchPredictionResponse(
+    BaseModel
+):
+    model_config = ConfigDict(
+        extra="forbid"
+    )
+
+    count: int = Field(
+        ge=1,
+        description=(
+            "Number of predictions returned."
+        ),
+    )
+
+    model_version: str = Field(
+        description=(
+            "Resolved MLflow Registry model version."
+        )
+    )
+
+    predictions: list[
+        PredictionResponse
+    ] = Field(
+        min_length=1
+    )

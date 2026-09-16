@@ -9,6 +9,8 @@ from fastapi import (
 )
 
 from app.schemas import (
+    BatchPredictionRequest,
+    BatchPredictionResponse,
     HealthResponse,
     ModelInfoResponse,
     OrderPredictionRequest,
@@ -48,6 +50,29 @@ def _load_service_config() -> dict:
 SERVICE_CONFIG = (
     _load_service_config()
 )
+
+
+try:
+    MAX_BATCH_SIZE = int(
+        SERVICE_CONFIG[
+            "max_batch_size"
+        ]
+    )
+except (
+    KeyError,
+    TypeError,
+    ValueError,
+) as exc:
+    raise RuntimeError(
+        "service.max_batch_size must be configured "
+        "as a positive integer."
+    ) from exc
+
+
+if MAX_BATCH_SIZE <= 0:
+    raise RuntimeError(
+        "service.max_batch_size must be greater than zero."
+    )
 
 
 app = FastAPI(
@@ -249,4 +274,133 @@ def predict_order(
         model_version=(
             runtime_model.version
         ),
+    )
+
+
+@app.post(
+    "/predict/batch",
+    response_model=BatchPredictionResponse,
+    tags=[
+        "Prediction",
+    ],
+    summary=(
+        "Predict late delivery for multiple orders"
+    ),
+)
+def predict_order_batch(
+    request: BatchPredictionRequest,
+) -> BatchPredictionResponse:
+    """
+    Score multiple orders using one production inference call.
+
+    The production model is resolved from MLflow Registry.
+    No fitting or retraining occurs.
+    """
+
+    batch_size = len(
+        request.orders
+    )
+
+    if (
+        batch_size
+        > MAX_BATCH_SIZE
+    ):
+        raise HTTPException(
+            status_code=(
+                status
+                .HTTP_422_UNPROCESSABLE_CONTENT
+            ),
+            detail=(
+                "Batch size exceeds configured maximum "
+                f"of {MAX_BATCH_SIZE} orders."
+            ),
+        )
+
+    runtime_model = (
+        _load_production_model()
+    )
+
+    raw_orders = pd.DataFrame(
+        [
+            order.model_dump()
+            for order
+            in request.orders
+        ]
+    )
+
+    try:
+        predictions = (
+            predict_orders_with_logging(
+                raw_orders,
+                runtime_model=(
+                    runtime_model
+                ),
+            )
+        )
+
+    except (
+        PredictionServiceError,
+        ValueError,
+        TypeError,
+    ) as exc:
+        raise HTTPException(
+            status_code=(
+                status
+                .HTTP_422_UNPROCESSABLE_CONTENT
+            ),
+            detail=(
+                "Prediction input could not be processed."
+            ),
+        ) from exc
+
+    if (
+        len(
+            predictions
+        )
+        != batch_size
+    ):
+        raise HTTPException(
+            status_code=(
+                status
+                .HTTP_500_INTERNAL_SERVER_ERROR
+            ),
+            detail=(
+                "Prediction service returned an "
+                "unexpected number of results."
+            ),
+        )
+
+    results = [
+        PredictionResponse(
+            order_id=str(
+                prediction[
+                    "order_id"
+                ]
+            ),
+            predicted_is_late=int(
+                prediction[
+                    "predicted_is_late"
+                ]
+            ),
+            late_probability=float(
+                prediction[
+                    "late_probability"
+                ]
+            ),
+            model_version=(
+                runtime_model.version
+            ),
+        )
+        for _index, prediction
+        in predictions.iterrows()
+    ]
+
+    return BatchPredictionResponse(
+        count=len(
+            results
+        ),
+        model_version=(
+            runtime_model.version
+        ),
+        predictions=results,
     )

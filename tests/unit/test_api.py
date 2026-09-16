@@ -499,3 +499,284 @@ def test_openapi_contains_prediction_route():
             "schemas"
         ]
     )
+
+
+    assert (
+        "/predict/batch"
+        in paths
+    )
+
+    assert (
+        "post"
+        in paths[
+            "/predict/batch"
+        ]
+    )
+
+    assert (
+        "BatchPredictionRequest"
+        in schema[
+            "components"
+        ][
+            "schemas"
+        ]
+    )
+
+    assert (
+        "BatchPredictionResponse"
+        in schema[
+            "components"
+        ][
+            "schemas"
+        ]
+    )
+
+
+def test_predict_batch(
+    monkeypatch,
+):
+    runtime_model = (
+        make_runtime_model()
+    )
+
+    monkeypatch.setattr(
+        api,
+        "load_registered_inference_model",
+        lambda:
+            runtime_model,
+    )
+
+    first = (
+        make_valid_order_payload()
+    )
+
+    second = (
+        make_valid_order_payload()
+    )
+
+    second[
+        "order_id"
+    ] = "order-2"
+
+    prediction_mock = Mock(
+        return_value=pd.DataFrame(
+            {
+                "order_id": [
+                    first[
+                        "order_id"
+                    ],
+                    "order-2",
+                ],
+                "late_probability": [
+                    0.02952043625959755,
+                    0.8,
+                ],
+                "predicted_is_late": [
+                    0,
+                    1,
+                ],
+            }
+        )
+    )
+
+    monkeypatch.setattr(
+        api,
+        "predict_orders_with_logging",
+        prediction_mock,
+    )
+
+    response = client.post(
+        "/predict/batch",
+        json={
+            "orders": [
+                first,
+                second,
+            ]
+        },
+    )
+
+    assert (
+        response.status_code
+        == 200
+    )
+
+    body = response.json()
+
+    assert (
+        body[
+            "count"
+        ]
+        == 2
+    )
+
+    assert (
+        body[
+            "model_version"
+        ]
+        == "1"
+    )
+
+    assert len(
+        body[
+            "predictions"
+        ]
+    ) == 2
+
+    assert (
+        body[
+            "predictions"
+        ][
+            0
+        ][
+            "predicted_is_late"
+        ]
+        == 0
+    )
+
+    assert (
+        body[
+            "predictions"
+        ][
+            1
+        ][
+            "predicted_is_late"
+        ]
+        == 1
+    )
+
+    prediction_mock.assert_called_once()
+
+    raw_orders = (
+        prediction_mock
+        .call_args
+        .args[
+            0
+        ]
+    )
+
+    assert (
+        raw_orders.shape
+        == (
+            2,
+            31,
+        )
+    )
+
+    assert (
+        prediction_mock
+        .call_args
+        .kwargs[
+            "runtime_model"
+        ]
+        is runtime_model
+    )
+
+
+def test_predict_batch_rejects_empty_batch():
+    response = client.post(
+        "/predict/batch",
+        json={
+            "orders": []
+        },
+    )
+
+    assert (
+        response.status_code
+        == 422
+    )
+
+
+def test_predict_batch_rejects_oversized_batch(
+    monkeypatch,
+):
+    monkeypatch.setattr(
+        api,
+        "MAX_BATCH_SIZE",
+        1,
+    )
+
+    response = client.post(
+        "/predict/batch",
+        json={
+            "orders": [
+                make_valid_order_payload(),
+                make_valid_order_payload(),
+            ]
+        },
+    )
+
+    assert (
+        response.status_code
+        == 422
+    )
+
+    assert response.json() == {
+        "detail":
+            (
+                "Batch size exceeds configured "
+                "maximum of 1 orders."
+            )
+    }
+
+
+def test_predict_batch_rejects_invalid_nested_order():
+    first = (
+        make_valid_order_payload()
+    )
+
+    second = (
+        make_valid_order_payload()
+    )
+
+    del second[
+        "payment_total"
+    ]
+
+    response = client.post(
+        "/predict/batch",
+        json={
+            "orders": [
+                first,
+                second,
+            ]
+        },
+    )
+
+    assert (
+        response.status_code
+        == 422
+    )
+
+
+def test_predict_batch_returns_503_when_registry_unavailable(
+    monkeypatch,
+):
+    def fail_load():
+        raise MlflowModelLoadError(
+            "registry unavailable"
+        )
+
+    monkeypatch.setattr(
+        api,
+        "load_registered_inference_model",
+        fail_load,
+    )
+
+    response = client.post(
+        "/predict/batch",
+        json={
+            "orders": [
+                make_valid_order_payload()
+            ]
+        },
+    )
+
+    assert (
+        response.status_code
+        == 503
+    )
+
+    assert response.json() == {
+        "detail":
+            "Production model is unavailable."
+    }
