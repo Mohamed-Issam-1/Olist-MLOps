@@ -13,3 +13,4 @@ dvc==3.67.1
 great-expectations==1.23.0
 
 mlflow==3.16.0
+httpx==0.28.1
