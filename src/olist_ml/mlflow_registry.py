@@ -15,6 +15,7 @@ from olist_ml.artifacts import (
 )
 from olist_ml.config import (
     find_project_root,
+    load_config,
     validate_artifact_paths,
 )
 from olist_ml.mlflow_model import (
@@ -351,6 +352,16 @@ def register_task2_model() -> RegisteredModelResult:
         find_project_root()
     )
 
+    project_config = (
+        load_config()
+    )
+
+    model_config = (
+        project_config[
+            "model"
+        ]
+    )
+
     artifact_paths = (
         validate_artifact_paths()
     )
@@ -409,15 +420,24 @@ def register_task2_model() -> RegisteredModelResult:
             .experiment_id
         ),
         run_name=(
-            "task2-model-registration"
+            f"{settings.registered_model_name}"
+            "-registration"
         ),
         tags={
             "source":
-                "task2-fitted-artifacts",
+                str(
+                    model_config[
+                        "source"
+                    ]
+                ),
             "training_performed":
                 "false",
-            "task2_baseline":
-                "6394cf2",
+            "model_version":
+                str(
+                    model_config[
+                        "version"
+                    ]
+                ),
         },
     ) as run:
         mlflow.log_params(
