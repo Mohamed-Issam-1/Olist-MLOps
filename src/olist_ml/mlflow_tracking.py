@@ -30,7 +30,7 @@ def get_mlflow_client(
 
     return MlflowClient(
         tracking_uri=settings.tracking_uri,
-        registry_uri=settings.tracking_uri,
+        registry_uri=settings.registry_uri,
     )
 
 

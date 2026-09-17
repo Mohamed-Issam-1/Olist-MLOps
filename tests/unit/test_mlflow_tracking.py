@@ -256,3 +256,75 @@ def test_validate_experiment_rejects_deleted_experiment(
             experiment,
             settings,
         )
+
+
+def test_get_mlflow_client_uses_registry_uri(
+    monkeypatch,
+    tmp_path,
+):
+    from olist_ml.mlflow_config import (
+        MlflowSettings,
+    )
+
+    settings = MlflowSettings(
+        backend_database=(
+            tmp_path
+            / "mlflow.db"
+        ),
+        artifact_directory=(
+            tmp_path
+            / "mlartifacts"
+        ),
+        experiment_name=(
+            "olist-late-delivery"
+        ),
+        registered_model_name=(
+            "olist-late-delivery"
+        ),
+        model_name=(
+            "inference_pipeline"
+        ),
+        production_alias=(
+            "champion"
+        ),
+        tracking_uri_override=(
+            "http://tracking:5000"
+        ),
+        registry_uri_override=(
+            "http://registry:5000"
+        ),
+    )
+
+    captured = {}
+
+    class CapturingClient:
+        def __init__(
+            self,
+            *,
+            tracking_uri,
+            registry_uri,
+        ):
+            captured[
+                "tracking_uri"
+            ] = tracking_uri
+
+            captured[
+                "registry_uri"
+            ] = registry_uri
+
+    monkeypatch.setattr(
+        tracking,
+        "MlflowClient",
+        CapturingClient,
+    )
+
+    tracking.get_mlflow_client(
+        settings
+    )
+
+    assert captured == {
+        "tracking_uri":
+            "http://tracking:5000",
+        "registry_uri":
+            "http://registry:5000",
+    }

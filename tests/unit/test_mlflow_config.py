@@ -8,6 +8,23 @@ import olist_ml.mlflow_config as mlflow_config
 from olist_ml.mlflow_config import MlflowSettings
 
 
+@pytest.fixture(
+    autouse=True
+)
+def clear_mlflow_uri_environment(
+    monkeypatch,
+):
+    for variable in (
+        "MLFLOW_TRACKING_URI",
+        "MLFLOW_REGISTRY_URI",
+        "OLIST_MLFLOW_ARTIFACT_URI",
+    ):
+        monkeypatch.delenv(
+            variable,
+            raising=False,
+        )
+
+
 def test_load_mlflow_settings():
     settings = (
         mlflow_config
@@ -203,4 +220,172 @@ def test_tracking_uri_preserves_parentheses(
     assert (
         "%29"
         not in settings.tracking_uri
+    )
+
+
+def test_environment_uris_override_local_defaults(
+    monkeypatch,
+):
+    monkeypatch.setenv(
+        "MLFLOW_TRACKING_URI",
+        "http://mlflow:5000",
+    )
+
+    monkeypatch.setenv(
+        "MLFLOW_REGISTRY_URI",
+        "http://mlflow-registry:5000",
+    )
+
+    monkeypatch.setenv(
+        "OLIST_MLFLOW_ARTIFACT_URI",
+        "mlflow-artifacts:/olist-late-delivery",
+    )
+
+    settings = (
+        mlflow_config
+        .load_mlflow_settings()
+    )
+
+    assert (
+        settings.tracking_uri
+        == "http://mlflow:5000"
+    )
+
+    assert (
+        settings.registry_uri
+        == "http://mlflow-registry:5000"
+    )
+
+    assert (
+        settings.artifact_uri
+        == (
+            "mlflow-artifacts:"
+            "/olist-late-delivery"
+        )
+    )
+
+    assert (
+        settings
+        .uses_local_artifact_directory
+        is False
+    )
+
+
+def test_registry_uri_defaults_to_tracking_uri(
+    monkeypatch,
+):
+    monkeypatch.setenv(
+        "MLFLOW_TRACKING_URI",
+        "http://mlflow:5000",
+    )
+
+    settings = (
+        mlflow_config
+        .load_mlflow_settings()
+    )
+
+    assert (
+        settings.registry_uri
+        == settings.tracking_uri
+    )
+
+
+def test_blank_environment_uri_is_rejected(
+    monkeypatch,
+):
+    monkeypatch.setenv(
+        "MLFLOW_TRACKING_URI",
+        "   ",
+    )
+
+    with pytest.raises(
+        mlflow_config
+        .MlflowConfigurationError,
+        match="must not be empty",
+    ):
+        mlflow_config.load_mlflow_settings()
+
+
+def test_configure_mlflow_uses_remote_uris(
+    monkeypatch,
+    tmp_path,
+):
+    artifact_directory = (
+        tmp_path
+        / "unused-local-artifacts"
+    )
+
+    settings = (
+        mlflow_config.MlflowSettings(
+            backend_database=(
+                tmp_path
+                / "mlflow.db"
+            ),
+            artifact_directory=(
+                artifact_directory
+            ),
+            experiment_name=(
+                "test-experiment"
+            ),
+            registered_model_name=(
+                "test-model"
+            ),
+            model_name=(
+                "test-pipeline"
+            ),
+            production_alias=(
+                "champion"
+            ),
+            tracking_uri_override=(
+                "http://mlflow:5000"
+            ),
+            registry_uri_override=(
+                "http://registry:5000"
+            ),
+            artifact_uri_override=(
+                "mlflow-artifacts:/test"
+            ),
+        )
+    )
+
+    monkeypatch.setattr(
+        mlflow_config,
+        "load_mlflow_settings",
+        lambda:
+            settings,
+    )
+
+    tracking_calls = []
+    registry_calls = []
+
+    monkeypatch.setattr(
+        mlflow,
+        "set_tracking_uri",
+        tracking_calls.append,
+    )
+
+    monkeypatch.setattr(
+        mlflow,
+        "set_registry_uri",
+        registry_calls.append,
+    )
+
+    result = (
+        mlflow_config
+        .configure_mlflow()
+    )
+
+    assert result == settings
+
+    assert tracking_calls == [
+        "http://mlflow:5000"
+    ]
+
+    assert registry_calls == [
+        "http://registry:5000"
+    ]
+
+    assert (
+        artifact_directory.exists()
+        is False
     )

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import os
 from pathlib import Path
 
 import mlflow
@@ -11,24 +12,68 @@ from olist_ml.config import (
 )
 
 
-class MlflowConfigurationError(RuntimeError):
+class MlflowConfigurationError(
+    RuntimeError
+):
     """Raised when MLflow configuration is invalid."""
 
 
-@dataclass(frozen=True)
+TRACKING_URI_ENV = (
+    "MLFLOW_TRACKING_URI"
+)
+
+REGISTRY_URI_ENV = (
+    "MLFLOW_REGISTRY_URI"
+)
+
+ARTIFACT_URI_ENV = (
+    "OLIST_MLFLOW_ARTIFACT_URI"
+)
+
+
+@dataclass(
+    frozen=True
+)
 class MlflowSettings:
     backend_database: Path
     artifact_directory: Path
+
     experiment_name: str
     registered_model_name: str
     model_name: str
     production_alias: str
 
+    tracking_uri_override: (
+        str | None
+    ) = None
+
+    registry_uri_override: (
+        str | None
+    ) = None
+
+    artifact_uri_override: (
+        str | None
+    ) = None
+
     @property
-    def tracking_uri(self) -> str:
+    def tracking_uri(
+        self,
+    ) -> str:
         """
-        Return a portable absolute SQLite tracking URI.
+        Return the MLflow tracking URI.
+
+        Local development uses SQLite. A deployment
+        can override it through MLFLOW_TRACKING_URI.
         """
+
+        if (
+            self.tracking_uri_override
+            is not None
+        ):
+            return (
+                self
+                .tracking_uri_override
+            )
 
         path = (
             self.backend_database
@@ -41,15 +86,62 @@ class MlflowSettings:
         )
 
     @property
-    def artifact_uri(self) -> str:
+    def registry_uri(
+        self,
+    ) -> str:
         """
-        Return the local artifact directory as a file URI.
+        Return the MLflow model registry URI.
+
+        By default the registry shares the tracking
+        backend. Deployments may configure a separate
+        registry URI when needed.
         """
+
+        if (
+            self.registry_uri_override
+            is not None
+        ):
+            return (
+                self
+                .registry_uri_override
+            )
+
+        return self.tracking_uri
+
+    @property
+    def artifact_uri(
+        self,
+    ) -> str:
+        """
+        Return the experiment artifact location.
+
+        Local development uses the project
+        mlartifacts directory. Containers may use
+        an artifact location exposed by MLflow.
+        """
+
+        if (
+            self.artifact_uri_override
+            is not None
+        ):
+            return (
+                self
+                .artifact_uri_override
+            )
 
         return (
             self.artifact_directory
             .resolve()
             .as_uri()
+        )
+
+    @property
+    def uses_local_artifact_directory(
+        self,
+    ) -> bool:
+        return (
+            self.artifact_uri_override
+            is None
         )
 
 
@@ -76,6 +168,28 @@ def _require_non_empty_string(
     return value.strip()
 
 
+def _read_optional_uri(
+    environment_variable: str,
+) -> str | None:
+    value = os.getenv(
+        environment_variable
+    )
+
+    if value is None:
+        return None
+
+    value = value.strip()
+
+    if not value:
+        raise MlflowConfigurationError(
+            "MLflow environment variable "
+            f"'{environment_variable}' "
+            "must not be empty."
+        )
+
+    return value
+
+
 def _resolve_local_path(
     project_root: Path,
     value: str,
@@ -98,9 +212,14 @@ def _resolve_local_path(
     ).resolve()
 
 
-def load_mlflow_settings() -> MlflowSettings:
+def load_mlflow_settings(
+) -> MlflowSettings:
     """
-    Load validated MLflow settings from project configuration.
+    Load validated MLflow settings.
+
+    Project configuration supplies portable local
+    defaults. Deployment environment variables can
+    override service-facing MLflow URIs.
     """
 
     config = load_config()
@@ -114,7 +233,8 @@ def load_mlflow_settings() -> MlflowSettings:
         dict,
     ):
         raise MlflowConfigurationError(
-            "Missing 'mlflow' section in project configuration."
+            "Missing 'mlflow' section "
+            "in project configuration."
         )
 
     project_root = (
@@ -174,31 +294,55 @@ def load_mlflow_settings() -> MlflowSettings:
                 "production_alias",
             )
         ),
+        tracking_uri_override=(
+            _read_optional_uri(
+                TRACKING_URI_ENV
+            )
+        ),
+        registry_uri_override=(
+            _read_optional_uri(
+                REGISTRY_URI_ENV
+            )
+        ),
+        artifact_uri_override=(
+            _read_optional_uri(
+                ARTIFACT_URI_ENV
+            )
+        ),
     )
 
 
-def configure_mlflow() -> MlflowSettings:
+def configure_mlflow(
+) -> MlflowSettings:
     """
-    Configure MLflow tracking and registry for this project.
+    Configure MLflow tracking and registry.
 
-    This function does not train or register a model.
+    Local development creates the project artifact
+    directory. Remote/container deployments leave
+    artifact storage management to the MLflow stack.
+
+    This function never trains or registers a model.
     """
 
     settings = (
         load_mlflow_settings()
     )
 
-    settings.artifact_directory.mkdir(
-        parents=True,
-        exist_ok=True,
-    )
+    if (
+        settings
+        .uses_local_artifact_directory
+    ):
+        settings.artifact_directory.mkdir(
+            parents=True,
+            exist_ok=True,
+        )
 
     mlflow.set_tracking_uri(
         settings.tracking_uri
     )
 
     mlflow.set_registry_uri(
-        settings.tracking_uri
+        settings.registry_uri
     )
 
     return settings
