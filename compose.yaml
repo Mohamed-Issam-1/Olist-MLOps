@@ -14,5 +14,74 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
+  mlflow-db:
+    image: postgres:16
+    container_name: olist_mlflow_db
+
+    environment:
+      POSTGRES_DB: ${MLFLOW_DB_NAME}
+      POSTGRES_USER: ${MLFLOW_DB_USER}
+      POSTGRES_PASSWORD: ${MLFLOW_DB_PASSWORD}
+
+    volumes:
+      - mlflow_db_data:/var/lib/postgresql/data
+
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${MLFLOW_DB_USER} -d ${MLFLOW_DB_NAME}"
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
+
+  mlflow:
+    build:
+      context: .
+      dockerfile: Dockerfile.mlflow
+
+    container_name: olist_mlflow
+
+    depends_on:
+      mlflow-db:
+        condition: service_healthy
+
+    command:
+      - mlflow
+      - server
+      - --host
+      - 0.0.0.0
+      - --port
+      - "5000"
+      - --backend-store-uri
+      - postgresql+psycopg2://${MLFLOW_DB_USER}:${MLFLOW_DB_PASSWORD}@mlflow-db:5432/${MLFLOW_DB_NAME}
+      - --artifacts-destination
+      - /mlartifacts
+      - --allowed-hosts
+      - mlflow:5000,localhost:5000,127.0.0.1:5000
+
+    ports:
+      - "5000:5000"
+
+    volumes:
+      - mlflow_artifacts:/mlartifacts
+
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:5000/health', timeout=5).read()"
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 10s
+
 volumes:
   postgres_data:
+  mlflow_db_data:
+  mlflow_artifacts:

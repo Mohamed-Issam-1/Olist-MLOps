@@ -42,3 +42,6 @@ Thumbs.db
 /mlflow.db
 /mlruns/
 /mlartifacts/
+
+# Local environment and secrets
+/.env
