@@ -1,0 +1,44 @@
+# Git and repository metadata
+.git
+.gitignore
+
+# Python environments and caches
+venv/
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Development and notebook content
+notebooks/
+tests/
+gx/
+
+# Versioned data/artifacts are not baked into the API image
+data/
+artifacts/
+.dvc/cache/
+
+# Local MLflow state
+mlflow.db
+mlruns/
+mlartifacts/
+
+# Runtime logs
+logs/
+
+# Local environment/secrets
+.env
+.env.*
+!.env.example
+
+# IDE / OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Miscellaneous local outputs
+*.log
