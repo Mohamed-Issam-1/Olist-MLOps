@@ -107,6 +107,40 @@ services:
 
     restart: "no"
 
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    container_name: olist_api
+
+    depends_on:
+      model-bootstrap:
+        condition: service_completed_successfully
+
+    environment:
+      MLFLOW_TRACKING_URI: http://mlflow:5000
+      MLFLOW_REGISTRY_URI: http://mlflow:5000
+      OLIST_MLFLOW_ARTIFACT_URI: mlflow-artifacts:/olist-late-delivery
+
+    ports:
+      - "8000:8000"
+
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=5).read()"
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 10s
+
+    restart: unless-stopped
+
 volumes:
   postgres_data:
   mlflow_db_data:
