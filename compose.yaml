@@ -81,6 +81,32 @@ services:
       retries: 20
       start_period: 10s
 
+  model-bootstrap:
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    container_name: olist_model_bootstrap
+
+    depends_on:
+      mlflow:
+        condition: service_healthy
+
+    environment:
+      MLFLOW_TRACKING_URI: http://mlflow:5000
+      MLFLOW_REGISTRY_URI: http://mlflow:5000
+      OLIST_MLFLOW_ARTIFACT_URI: mlflow-artifacts:/olist-late-delivery
+
+    volumes:
+      - ./artifacts:/app/artifacts:ro
+
+    command:
+      - python
+      - -m
+      - olist_ml.mlflow_bootstrap
+
+    restart: "no"
+
 volumes:
   postgres_data:
   mlflow_db_data:
