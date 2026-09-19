@@ -1,4 +1,22 @@
 services:
+  dvc-pull:
+    build:
+      context: .
+      dockerfile: Dockerfile.dvc-pull
+
+    container_name: olist_dvc_pull
+
+    environment:
+      AWS_ACCESS_KEY_ID: ${DAGSHUB_TOKEN:-}
+      AWS_SECRET_ACCESS_KEY: ${DAGSHUB_TOKEN:-}
+      DVC_NO_ANALYTICS: "true"
+
+    volumes:
+      - ./data:/workspace/data
+      - ./artifacts:/workspace/artifacts
+
+    restart: "no"
+
   postgres:
     image: postgres:16
     container_name: olist_postgres
@@ -89,6 +107,8 @@ services:
     container_name: olist_model_bootstrap
 
     depends_on:
+      dvc-pull:
+        condition: service_completed_successfully
       mlflow:
         condition: service_healthy
 

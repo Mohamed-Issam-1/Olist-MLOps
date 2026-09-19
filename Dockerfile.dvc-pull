@@ -1,0 +1,28 @@
+FROM python:3.13-slim
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1
+
+WORKDIR /workspace
+
+COPY requirements/dvc.txt \
+    /workspace/requirements/dvc.txt
+
+RUN python -m pip install \
+        --upgrade pip \
+    && python -m pip install \
+        -r /workspace/requirements/dvc.txt
+
+COPY .dvc/config \
+    /workspace/.dvc/config
+
+RUN printf "[core]\n    no_scm = true\n" \
+    > /workspace/.dvc/config.local
+
+COPY data.dvc \
+    artifacts.dvc \
+    .dvcignore \
+    /workspace/
+
+CMD ["sh", "-c", "if [ -z \"$AWS_ACCESS_KEY_ID\" ] || [ -z \"$AWS_SECRET_ACCESS_KEY\" ]; then echo 'DAGSHUB_TOKEN is required for DVC pull.' >&2; exit 1; fi; exec dvc pull data.dvc artifacts.dvc -r dagshub -j 1"]
