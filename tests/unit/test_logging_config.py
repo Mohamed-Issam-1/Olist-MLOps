@@ -4,17 +4,11 @@ import olist_ml.logging_config as logging_module
 
 
 def reset_logger():
-    logger = logging.getLogger(
-        logging_module.LOGGER_NAME
-    )
+    logger = logging.getLogger(logging_module.LOGGER_NAME)
 
-    for handler in list(
-        logger.handlers
-    ):
+    for handler in list(logger.handlers):
         handler.close()
-        logger.removeHandler(
-            handler
-        )
+        logger.removeHandler(handler)
 
     return logger
 
@@ -32,8 +26,7 @@ def test_configure_logging_creates_console_and_file_handlers(
             "logging": {
                 "level": "INFO",
                 "directory": "logs",
-                "application_log":
-                    "application.log",
+                "application_log": "application.log",
             }
         },
     )
@@ -41,35 +34,18 @@ def test_configure_logging_creates_console_and_file_handlers(
     monkeypatch.setattr(
         logging_module,
         "resolve_project_path",
-        lambda value:
-            tmp_path / value,
+        lambda value: tmp_path / value,
     )
 
-    logger = (
-        logging_module
-        .configure_logging()
-    )
+    logger = logging_module.configure_logging()
 
-    handler_types = {
-        type(handler)
-        for handler in logger.handlers
-    }
+    handler_types = {type(handler) for handler in logger.handlers}
 
-    assert (
-        logging.StreamHandler
-        in handler_types
-    )
+    assert logging.StreamHandler in handler_types
 
-    assert (
-        logging.FileHandler
-        in handler_types
-    )
+    assert logging.FileHandler in handler_types
 
-    assert (
-        tmp_path
-        / "logs"
-        / "application.log"
-    ).exists()
+    assert (tmp_path / "logs" / "application.log").exists()
 
     reset_logger()
 
@@ -87,8 +63,7 @@ def test_configure_logging_uses_configured_level(
             "logging": {
                 "level": "WARNING",
                 "directory": "logs",
-                "application_log":
-                    "application.log",
+                "application_log": "application.log",
             }
         },
     )
@@ -96,19 +71,12 @@ def test_configure_logging_uses_configured_level(
     monkeypatch.setattr(
         logging_module,
         "resolve_project_path",
-        lambda value:
-            tmp_path / value,
+        lambda value: tmp_path / value,
     )
 
-    logger = (
-        logging_module
-        .configure_logging()
-    )
+    logger = logging_module.configure_logging()
 
-    assert (
-        logger.level
-        == logging.WARNING
-    )
+    assert logger.level == logging.WARNING
 
     reset_logger()
 
@@ -126,8 +94,7 @@ def test_configure_logging_does_not_duplicate_handlers(
             "logging": {
                 "level": "INFO",
                 "directory": "logs",
-                "application_log":
-                    "application.log",
+                "application_log": "application.log",
             }
         },
     )
@@ -135,27 +102,16 @@ def test_configure_logging_does_not_duplicate_handlers(
     monkeypatch.setattr(
         logging_module,
         "resolve_project_path",
-        lambda value:
-            tmp_path / value,
+        lambda value: tmp_path / value,
     )
 
-    first = (
-        logging_module
-        .configure_logging()
-    )
+    first = logging_module.configure_logging()
 
-    first_count = len(
-        first.handlers
-    )
+    first_count = len(first.handlers)
 
-    second = (
-        logging_module
-        .configure_logging()
-    )
+    second = logging_module.configure_logging()
 
-    second_count = len(
-        second.handlers
-    )
+    second_count = len(second.handlers)
 
     assert first is second
     assert first_count == 2
@@ -177,8 +133,7 @@ def test_get_logger_returns_child_logger(
             "logging": {
                 "level": "INFO",
                 "directory": "logs",
-                "application_log":
-                    "application.log",
+                "application_log": "application.log",
             }
         },
     )
@@ -186,20 +141,11 @@ def test_get_logger_returns_child_logger(
     monkeypatch.setattr(
         logging_module,
         "resolve_project_path",
-        lambda value:
-            tmp_path / value,
+        lambda value: tmp_path / value,
     )
 
-    logger = (
-        logging_module
-        .get_logger(
-            "inference"
-        )
-    )
+    logger = logging_module.get_logger("inference")
 
-    assert (
-        logger.name
-        == "olist_ml.inference"
-    )
+    assert logger.name == "olist_ml.inference"
 
     reset_logger()

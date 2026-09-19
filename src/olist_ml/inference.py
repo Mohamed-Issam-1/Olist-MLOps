@@ -35,19 +35,14 @@ def _resolve_positive_class(
     config = load_config()
 
     try:
-        return config[
-            "inference"
-        ][
-            "positive_class"
-        ]
+        return config["inference"]["positive_class"]
 
     except (
         KeyError,
         TypeError,
     ) as exc:
         raise InferenceError(
-            "The positive inference class is not "
-            "configured correctly."
+            "The positive inference class is not configured correctly."
         ) from exc
 
 
@@ -64,17 +59,11 @@ def _get_positive_class_index(
         model,
         "classes_",
     ):
-        raise InferenceError(
-            "Loaded model does not expose classes_."
-        )
+        raise InferenceError("Loaded model does not expose classes_.")
 
-    classes = np.asarray(
-        model.classes_
-    )
+    classes = np.asarray(model.classes_)
 
-    matches = np.flatnonzero(
-        classes == positive_class
-    )
+    matches = np.flatnonzero(classes == positive_class)
 
     if len(matches) != 1:
         raise InferenceError(
@@ -84,9 +73,7 @@ def _get_positive_class_index(
             f"Available classes: {classes.tolist()}."
         )
 
-    return int(
-        matches[0]
-    )
+    return int(matches[0])
 
 
 def predict_late_probabilities(
@@ -98,85 +85,45 @@ def predict_late_probabilities(
     Predict the probability of the configured late-delivery class.
     """
 
-    artifacts = (
-        artifacts
-        or load_inference_artifacts()
-    )
+    artifacts = artifacts or load_inference_artifacts()
 
     model = artifacts.model
 
-    positive_class = (
-        _resolve_positive_class(
-            positive_class
-        )
-    )
+    positive_class = _resolve_positive_class(positive_class)
 
-    positive_class_index = (
-        _get_positive_class_index(
-            model,
-            positive_class,
-        )
+    positive_class_index = _get_positive_class_index(
+        model,
+        positive_class,
     )
 
     probability_matrix = np.asarray(
-        model.predict_proba(
-            transformed_features
-        ),
+        model.predict_proba(transformed_features),
         dtype=float,
     )
 
     if probability_matrix.ndim != 2:
+        raise InferenceError("predict_proba() must return a two-dimensional array.")
+
+    expected_rows = transformed_features.shape[0]
+
+    if probability_matrix.shape[0] != expected_rows:
         raise InferenceError(
-            "predict_proba() must return "
-            "a two-dimensional array."
+            "Prediction row count does not match the transformed input row count."
         )
 
-    expected_rows = (
-        transformed_features.shape[0]
-    )
+    classes = np.asarray(model.classes_)
 
-    if (
-        probability_matrix.shape[0]
-        != expected_rows
-    ):
+    if probability_matrix.shape[1] != len(classes):
         raise InferenceError(
-            "Prediction row count does not match "
-            "the transformed input row count."
+            "Probability-column count does not match the number of model classes."
         )
 
-    classes = np.asarray(
-        model.classes_
-    )
+    if not np.all(np.isfinite(probability_matrix)):
+        raise InferenceError("Model produced NaN or infinite probabilities.")
 
-    if (
-        probability_matrix.shape[1]
-        != len(classes)
-    ):
+    if np.any(probability_matrix < 0) or np.any(probability_matrix > 1):
         raise InferenceError(
-            "Probability-column count does not match "
-            "the number of model classes."
-        )
-
-    if not np.all(
-        np.isfinite(
-            probability_matrix
-        )
-    ):
-        raise InferenceError(
-            "Model produced NaN or infinite probabilities."
-        )
-
-    if (
-        np.any(
-            probability_matrix < 0
-        )
-        or np.any(
-            probability_matrix > 1
-        )
-    ):
-        raise InferenceError(
-            "Model produced probabilities outside "
-            "the valid range [0, 1]."
+            "Model produced probabilities outside the valid range [0, 1]."
         )
 
     return probability_matrix[
@@ -208,8 +155,7 @@ def apply_classification_threshold(
         or not 0 <= threshold <= 1
     ):
         raise InferenceError(
-            "Classification threshold must be "
-            "a number between 0 and 1."
+            "Classification threshold must be a number between 0 and 1."
         )
 
     probabilities = np.asarray(
@@ -218,38 +164,15 @@ def apply_classification_threshold(
     )
 
     if probabilities.ndim != 1:
-        raise InferenceError(
-            "Probability input must be "
-            "one-dimensional."
-        )
+        raise InferenceError("Probability input must be one-dimensional.")
 
-    if not np.all(
-        np.isfinite(
-            probabilities
-        )
-    ):
-        raise InferenceError(
-            "Probabilities contain NaN or infinite values."
-        )
+    if not np.all(np.isfinite(probabilities)):
+        raise InferenceError("Probabilities contain NaN or infinite values.")
 
-    if (
-        np.any(
-            probabilities < 0
-        )
-        or np.any(
-            probabilities > 1
-        )
-    ):
-        raise InferenceError(
-            "Probabilities must be between 0 and 1."
-        )
+    if np.any(probabilities < 0) or np.any(probabilities > 1):
+        raise InferenceError("Probabilities must be between 0 and 1.")
 
-    return (
-        probabilities
-        >= float(
-            threshold
-        )
-    ).astype(int)
+    return (probabilities >= float(threshold)).astype(int)
 
 
 def predict_orders(
@@ -272,66 +195,44 @@ def predict_orders(
         raw_orders,
         pd.DataFrame,
     ):
-        raise InferenceError(
-            "raw_orders must be a pandas DataFrame."
-        )
+        raise InferenceError("raw_orders must be a pandas DataFrame.")
 
     if raw_orders.empty:
-        raise InferenceError(
-            "Cannot run inference on an empty DataFrame."
-        )
+        raise InferenceError("Cannot run inference on an empty DataFrame.")
 
-    artifacts = (
-        artifacts
-        or load_inference_artifacts()
-    )
+    artifacts = artifacts or load_inference_artifacts()
 
-    engineered = engineer_features(
-        raw_orders
-    )
+    engineered = engineer_features(raw_orders)
 
     transformed = transform_features(
         engineered,
         artifacts,
     )
 
-    probabilities = (
-        predict_late_probabilities(
-            transformed,
-            artifacts,
-            positive_class,
-        )
+    probabilities = predict_late_probabilities(
+        transformed,
+        artifacts,
+        positive_class,
     )
 
-    predictions = (
-        apply_classification_threshold(
-            probabilities,
-            artifacts.classification_threshold,
-        )
+    predictions = apply_classification_threshold(
+        probabilities,
+        artifacts.classification_threshold,
     )
 
     result = pd.DataFrame(
         {
-            "late_probability":
-                probabilities,
-            "predicted_is_late":
-                predictions,
+            "late_probability": probabilities,
+            "predicted_is_late": predictions,
         },
         index=raw_orders.index,
     )
 
-    if (
-        "order_id"
-        in raw_orders.columns
-    ):
+    if "order_id" in raw_orders.columns:
         result.insert(
             0,
             "order_id",
-            raw_orders[
-                "order_id"
-            ].values,
+            raw_orders["order_id"].values,
         )
 
-    return result.reset_index(
-        drop=True
-    )
+    return result.reset_index(drop=True)

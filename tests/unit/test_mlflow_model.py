@@ -83,25 +83,13 @@ class DummyModel:
 def make_context(
     tmp_path,
 ):
-    preprocessor_path = (
-        tmp_path
-        / "preprocessor.joblib"
-    )
+    preprocessor_path = tmp_path / "preprocessor.joblib"
 
-    model_bundle_path = (
-        tmp_path
-        / "model_bundle.joblib"
-    )
+    model_bundle_path = tmp_path / "model_bundle.joblib"
 
-    feature_names_path = (
-        tmp_path
-        / "feature_names.json"
-    )
+    feature_names_path = tmp_path / "feature_names.json"
 
-    feature_config_path = (
-        tmp_path
-        / "feature_config.json"
-    )
+    feature_config_path = tmp_path / "feature_config.json"
 
     joblib.dump(
         DummyPreprocessor(),
@@ -110,14 +98,10 @@ def make_context(
 
     joblib.dump(
         {
-            "model":
-                DummyModel(),
-            "classification_threshold":
-                0.4,
-            "model_type":
-                "DummyModel",
-            "feature_count":
-                2,
+            "model": DummyModel(),
+            "classification_threshold": 0.4,
+            "model_type": "DummyModel",
+            "feature_count": 2,
         },
         model_bundle_path,
     )
@@ -150,22 +134,10 @@ def make_context(
 
     return SimpleNamespace(
         artifacts={
-            "preprocessor":
-                str(
-                    preprocessor_path
-                ),
-            "model_bundle":
-                str(
-                    model_bundle_path
-                ),
-            "feature_names":
-                str(
-                    feature_names_path
-                ),
-            "feature_config":
-                str(
-                    feature_config_path
-                ),
+            "preprocessor": str(preprocessor_path),
+            "model_bundle": str(model_bundle_path),
+            "feature_names": str(feature_names_path),
+            "feature_config": str(feature_config_path),
         }
     )
 
@@ -173,65 +145,35 @@ def make_context(
 def test_load_context_loads_validated_artifacts(
     tmp_path,
 ):
-    model = (
-        OlistLateDeliveryPythonModel()
-    )
+    model = OlistLateDeliveryPythonModel()
 
-    model.load_context(
-        make_context(
-            tmp_path
-        )
-    )
+    model.load_context(make_context(tmp_path))
 
-    assert (
-        type(
-            model.artifacts.model
-        ).__name__
-        == "DummyModel"
-    )
+    assert type(model.artifacts.model).__name__ == "DummyModel"
 
-    assert (
-        model
-        .artifacts
-        .classification_threshold
-        == pytest.approx(
-            0.4
-        )
-    )
+    assert model.artifacts.classification_threshold == pytest.approx(0.4)
 
-    assert len(
-        model.artifacts.feature_names
-    ) == 2
+    assert len(model.artifacts.feature_names) == 2
 
 
 def test_load_context_rejects_missing_artifact(
     tmp_path,
 ):
-    context = make_context(
-        tmp_path
-    )
+    context = make_context(tmp_path)
 
-    del context.artifacts[
-        "model_bundle"
-    ]
+    del context.artifacts["model_bundle"]
 
-    model = (
-        OlistLateDeliveryPythonModel()
-    )
+    model = OlistLateDeliveryPythonModel()
 
     with pytest.raises(
         MlflowModelError,
         match="missing required artifacts",
     ):
-        model.load_context(
-            context
-        )
+        model.load_context(context)
 
 
 def test_predict_requires_loaded_context():
-    model = (
-        OlistLateDeliveryPythonModel()
-    )
+    model = OlistLateDeliveryPythonModel()
 
     with pytest.raises(
         MlflowModelError,
@@ -253,15 +195,9 @@ def test_predict_reuses_production_inference(
     monkeypatch,
     tmp_path,
 ):
-    model = (
-        OlistLateDeliveryPythonModel()
-    )
+    model = OlistLateDeliveryPythonModel()
 
-    model.load_context(
-        make_context(
-            tmp_path
-        )
-    )
+    model.load_context(make_context(tmp_path))
 
     model_input = pd.DataFrame(
         {
@@ -292,13 +228,9 @@ def test_predict_reuses_production_inference(
         artifacts=None,
         positive_class=None,
     ):
-        captured[
-            "raw_orders"
-        ] = raw_orders
+        captured["raw_orders"] = raw_orders
 
-        captured[
-            "artifacts"
-        ] = artifacts
+        captured["artifacts"] = artifacts
 
         return expected.copy()
 
@@ -318,16 +250,6 @@ def test_predict_reuses_production_inference(
         expected,
     )
 
-    assert (
-        captured[
-            "raw_orders"
-        ]
-        is model_input
-    )
+    assert captured["raw_orders"] is model_input
 
-    assert (
-        captured[
-            "artifacts"
-        ]
-        is model.artifacts
-    )
+    assert captured["artifacts"] is model.artifacts

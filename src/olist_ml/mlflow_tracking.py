@@ -44,17 +44,11 @@ def _validate_experiment(
     """
 
     if experiment is None:
-        raise MlflowTrackingError(
-            "MLflow experiment could not be loaded."
-        )
+        raise MlflowTrackingError("MLflow experiment could not be loaded.")
 
-    if (
-        experiment.name
-        != settings.experiment_name
-    ):
+    if experiment.name != settings.experiment_name:
         raise MlflowTrackingError(
-            "MLflow experiment name does not "
-            "match project configuration."
+            "MLflow experiment name does not match project configuration."
         )
 
     lifecycle_stage = getattr(
@@ -65,26 +59,14 @@ def _validate_experiment(
 
     if lifecycle_stage != "active":
         raise MlflowTrackingError(
-            "MLflow experiment is not active: "
-            f"{lifecycle_stage!r}."
+            f"MLflow experiment is not active: {lifecycle_stage!r}."
         )
 
-    stored_artifact_location = (
-        _normalize_uri(
-            experiment.artifact_location
-        )
-    )
+    stored_artifact_location = _normalize_uri(experiment.artifact_location)
 
-    configured_artifact_location = (
-        _normalize_uri(
-            settings.artifact_uri
-        )
-    )
+    configured_artifact_location = _normalize_uri(settings.artifact_uri)
 
-    if (
-        stored_artifact_location
-        != configured_artifact_location
-    ):
+    if stored_artifact_location != configured_artifact_location:
         raise MlflowTrackingError(
             "MLflow experiment artifact location "
             "does not match project configuration. "
@@ -101,39 +83,19 @@ def ensure_experiment():
     This function does not train or register models.
     """
 
-    settings = (
-        configure_mlflow()
-    )
+    settings = configure_mlflow()
 
-    client = get_mlflow_client(
-        settings
-    )
+    client = get_mlflow_client(settings)
 
-    experiment = (
-        client.get_experiment_by_name(
-            settings.experiment_name
-        )
-    )
+    experiment = client.get_experiment_by_name(settings.experiment_name)
 
     if experiment is None:
-        experiment_id = (
-            client.create_experiment(
-                name=(
-                    settings
-                    .experiment_name
-                ),
-                artifact_location=(
-                    settings
-                    .artifact_uri
-                ),
-            )
+        experiment_id = client.create_experiment(
+            name=(settings.experiment_name),
+            artifact_location=(settings.artifact_uri),
         )
 
-        experiment = (
-            client.get_experiment(
-                experiment_id
-            )
-        )
+        experiment = client.get_experiment(experiment_id)
 
     _validate_experiment(
         experiment,

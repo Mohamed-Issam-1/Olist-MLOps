@@ -7,7 +7,6 @@ from olist_ml.config import (
     resolve_project_path,
 )
 
-
 LOGGER_NAME = "olist_ml"
 
 
@@ -23,9 +22,7 @@ def configure_logging() -> logging.Logger:
     config = load_config()
     logging_config = config["logging"]
 
-    logger = logging.getLogger(
-        LOGGER_NAME
-    )
+    logger = logging.getLogger(LOGGER_NAME)
 
     if logger.handlers:
         return logger
@@ -47,74 +44,42 @@ def configure_logging() -> logging.Logger:
         level,
         int,
     ):
-        raise ValueError(
-            f"Invalid logging level: {level_name}"
-        )
+        raise ValueError(f"Invalid logging level: {level_name}")
 
-    log_directory = resolve_project_path(
-        logging_config[
-            "directory"
-        ]
-    )
+    log_directory = resolve_project_path(logging_config["directory"])
 
     log_directory.mkdir(
         parents=True,
         exist_ok=True,
     )
 
-    application_log = (
-        log_directory
-        / logging_config[
-            "application_log"
-        ]
-    )
+    application_log = log_directory / logging_config["application_log"]
 
     formatter = logging.Formatter(
-        fmt=(
-            "%(asctime)s | "
-            "%(levelname)s | "
-            "%(name)s | "
-            "%(message)s"
-        ),
+        fmt=("%(asctime)s | %(levelname)s | %(name)s | %(message)s"),
         datefmt="%Y-%m-%d %H:%M:%S",
     )
 
-    console_handler = (
-        logging.StreamHandler()
-    )
+    console_handler = logging.StreamHandler()
 
-    console_handler.setLevel(
-        level
-    )
+    console_handler.setLevel(level)
 
-    console_handler.setFormatter(
-        formatter
-    )
+    console_handler.setFormatter(formatter)
 
     file_handler = logging.FileHandler(
         application_log,
         encoding="utf-8",
     )
 
-    file_handler.setLevel(
-        level
-    )
+    file_handler.setLevel(level)
 
-    file_handler.setFormatter(
-        formatter
-    )
+    file_handler.setFormatter(formatter)
 
-    logger.setLevel(
-        level
-    )
+    logger.setLevel(level)
 
-    logger.addHandler(
-        console_handler
-    )
+    logger.addHandler(console_handler)
 
-    logger.addHandler(
-        file_handler
-    )
+    logger.addHandler(file_handler)
 
     logger.propagate = False
 
@@ -131,10 +96,6 @@ def get_logger(
     configure_logging()
 
     if not name:
-        return logging.getLogger(
-            LOGGER_NAME
-        )
+        return logging.getLogger(LOGGER_NAME)
 
-    return logging.getLogger(
-        f"{LOGGER_NAME}.{name}"
-    )
+    return logging.getLogger(f"{LOGGER_NAME}.{name}")

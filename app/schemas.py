@@ -10,38 +10,18 @@ from pydantic import (
 )
 
 
-class HealthResponse(
-    BaseModel
-):
-    model_config = ConfigDict(
-        extra="forbid"
-    )
+class HealthResponse(BaseModel):
+    model_config = ConfigDict(extra="forbid")
 
-    status: str = Field(
-        description=(
-            "Current service health status."
-        )
-    )
+    status: str = Field(description=("Current service health status."))
 
-    service: str = Field(
-        description=(
-            "Configured API service name."
-        )
-    )
+    service: str = Field(description=("Configured API service name."))
 
-    api_version: str = Field(
-        description=(
-            "API contract version."
-        )
-    )
+    api_version: str = Field(description=("API contract version."))
 
 
-class ModelInfoResponse(
-    BaseModel
-):
-    model_config = ConfigDict(
-        extra="forbid"
-    )
+class ModelInfoResponse(BaseModel):
+    model_config = ConfigDict(extra="forbid")
 
     source: str
 
@@ -63,9 +43,7 @@ class ModelInfoResponse(
     )
 
 
-class OrderPredictionRequest(
-    BaseModel
-):
+class OrderPredictionRequest(BaseModel):
     """
     One order at the production prediction point.
 
@@ -79,68 +57,42 @@ class OrderPredictionRequest(
         extra="forbid",
         json_schema_extra={
             "example": {
-                "order_id":
-                    "b3b54427f53d13f6063ef7007bf7d371",
-
+                "order_id": "b3b54427f53d13f6063ef7007bf7d371",
                 "item_count": 1.0,
                 "unique_products": 1.0,
                 "unique_sellers": 1.0,
-
                 "total_item_price": 55.0,
                 "avg_item_price": 55.0,
-
                 "total_freight_value": 7.65,
                 "avg_freight_value": 7.65,
-
                 "unique_product_categories": 1.0,
-
                 "avg_product_weight_g": 200.0,
                 "max_product_weight_g": 200.0,
-
                 "avg_product_length_cm": 16.0,
                 "avg_product_height_cm": 2.0,
                 "avg_product_width_cm": 20.0,
-
                 "avg_product_photos_qty": 5.0,
-
                 "unique_seller_states": 1.0,
-
                 "payment_records": 1.0,
                 "payment_types_count": 1.0,
                 "payment_total": 62.65,
                 "payment_installments_max": 1.0,
-
                 "customer_state": "SP",
-                "primary_product_category":
-                    "watches_gifts",
+                "primary_product_category": "watches_gifts",
                 "primary_seller_state": "SP",
                 "primary_payment_type": "boleto",
-
-                "avg_seller_lat":
-                    -23.652366177840182,
-                "avg_seller_lng":
-                    -46.75575337195744,
-
-                "customer_lat":
-                    -23.609430024757696,
-                "customer_lng":
-                    -46.66050227039207,
-
-                "order_approved_at":
-                    "2018-06-22T02:59:29",
-
-                "order_estimated_delivery_date":
-                    "2018-07-04T00:00:00",
-
-                "order_purchase_timestamp":
-                    "2018-06-21T08:41:07",
+                "avg_seller_lat": -23.652366177840182,
+                "avg_seller_lng": -46.75575337195744,
+                "customer_lat": -23.609430024757696,
+                "customer_lng": -46.66050227039207,
+                "order_approved_at": "2018-06-22T02:59:29",
+                "order_estimated_delivery_date": "2018-07-04T00:00:00",
+                "order_purchase_timestamp": "2018-06-21T08:41:07",
             }
         },
     )
 
-    order_id: str = Field(
-        min_length=1
-    )
+    order_id: str = Field(min_length=1)
 
     item_count: float | None
 
@@ -203,47 +155,26 @@ class OrderPredictionRequest(
     order_purchase_timestamp: datetime | None
 
 
-class PredictionResponse(
-    BaseModel
-):
-    model_config = ConfigDict(
-        extra="forbid"
-    )
+class PredictionResponse(BaseModel):
+    model_config = ConfigDict(extra="forbid")
 
-    order_id: str = Field(
-        description=(
-            "Order identifier supplied in the request."
-        )
-    )
+    order_id: str = Field(description=("Order identifier supplied in the request."))
 
     predicted_is_late: Literal[
         0,
         1,
-    ] = Field(
-        description=(
-            "1 means predicted late; "
-            "0 means predicted on time."
-        )
-    )
+    ] = Field(description=("1 means predicted late; 0 means predicted on time."))
 
     late_probability: float = Field(
         ge=0.0,
         le=1.0,
-        description=(
-            "Probability assigned to the late class."
-        ),
+        description=("Probability assigned to the late class."),
     )
 
-    model_version: str = Field(
-        description=(
-            "Resolved MLflow Registry model version."
-        )
-    )
+    model_version: str = Field(description=("Resolved MLflow Registry model version."))
 
 
-class BatchPredictionRequest(
-    BaseModel
-):
+class BatchPredictionRequest(BaseModel):
     """
     One or more orders submitted for batch inference.
 
@@ -251,42 +182,22 @@ class BatchPredictionRequest(
     service.max_batch_size in the project configuration.
     """
 
-    model_config = ConfigDict(
-        extra="forbid"
-    )
+    model_config = ConfigDict(extra="forbid")
 
-    orders: list[
-        OrderPredictionRequest
-    ] = Field(
+    orders: list[OrderPredictionRequest] = Field(
         min_length=1,
-        description=(
-            "Orders to score in one inference request."
-        ),
+        description=("Orders to score in one inference request."),
     )
 
 
-class BatchPredictionResponse(
-    BaseModel
-):
-    model_config = ConfigDict(
-        extra="forbid"
-    )
+class BatchPredictionResponse(BaseModel):
+    model_config = ConfigDict(extra="forbid")
 
     count: int = Field(
         ge=1,
-        description=(
-            "Number of predictions returned."
-        ),
+        description=("Number of predictions returned."),
     )
 
-    model_version: str = Field(
-        description=(
-            "Resolved MLflow Registry model version."
-        )
-    )
+    model_version: str = Field(description=("Resolved MLflow Registry model version."))
 
-    predictions: list[
-        PredictionResponse
-    ] = Field(
-        min_length=1
-    )
+    predictions: list[PredictionResponse] = Field(min_length=1)

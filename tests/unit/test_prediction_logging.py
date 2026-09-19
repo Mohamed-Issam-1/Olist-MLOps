@@ -8,18 +8,12 @@ import olist_ml.prediction_logging as prediction_logging
 
 
 def reset_prediction_logger():
-    logger = logging.getLogger(
-        prediction_logging.PREDICTION_LOGGER_NAME
-    )
+    logger = logging.getLogger(prediction_logging.PREDICTION_LOGGER_NAME)
 
-    for handler in list(
-        logger.handlers
-    ):
+    for handler in list(logger.handlers):
         handler.close()
 
-        logger.removeHandler(
-            handler
-        )
+        logger.removeHandler(handler)
 
 
 def configure_test_environment(
@@ -34,8 +28,7 @@ def configure_test_environment(
         lambda: {
             "logging": {
                 "directory": "logs",
-                "prediction_log":
-                    "predictions.jsonl",
+                "prediction_log": "predictions.jsonl",
             }
         },
     )
@@ -43,8 +36,7 @@ def configure_test_environment(
     monkeypatch.setattr(
         prediction_logging,
         "resolve_project_path",
-        lambda value:
-            tmp_path / value,
+        lambda value: tmp_path / value,
     )
 
 
@@ -59,11 +51,7 @@ def test_configure_prediction_logger_creates_jsonl_file(
 
     prediction_logging.configure_prediction_logger()
 
-    assert (
-        tmp_path
-        / "logs"
-        / "predictions.jsonl"
-    ).exists()
+    assert (tmp_path / "logs" / "predictions.jsonl").exists()
 
     reset_prediction_logger()
 
@@ -107,114 +95,47 @@ def test_log_prediction_batch_writes_request_and_predictions(
         }
     )
 
-    request_id = (
-        prediction_logging
-        .log_prediction_batch(
-            raw_orders,
-            predictions,
-            input_columns=[
-                "order_id",
-                "feature_a",
-            ],
-            latency_ms=12.5,
-            model_type=
-                "LogisticRegression",
-            model_version=
-                "test-version",
-            threshold=0.4,
-        )
+    request_id = prediction_logging.log_prediction_batch(
+        raw_orders,
+        predictions,
+        input_columns=[
+            "order_id",
+            "feature_a",
+        ],
+        latency_ms=12.5,
+        model_type="LogisticRegression",
+        model_version="test-version",
+        threshold=0.4,
     )
 
     reset_prediction_logger()
 
-    log_path = (
-        tmp_path
-        / "logs"
-        / "predictions.jsonl"
-    )
+    log_path = tmp_path / "logs" / "predictions.jsonl"
 
-    lines = (
-        log_path
-        .read_text(
-            encoding="utf-8"
-        )
-        .splitlines()
-    )
+    lines = log_path.read_text(encoding="utf-8").splitlines()
 
     assert len(lines) == 3
 
-    records = [
-        json.loads(
-            line
-        )
-        for line in lines
-    ]
+    records = [json.loads(line) for line in lines]
 
-    assert (
-        records[0][
-            "event"
-        ]
-        == "prediction_request"
-    )
+    assert records[0]["event"] == "prediction_request"
 
-    assert (
-        records[0][
-            "request_id"
-        ]
-        == request_id
-    )
+    assert records[0]["request_id"] == request_id
 
-    assert (
-        records[0][
-            "request_size"
-        ]
-        == 2
-    )
+    assert records[0]["request_size"] == 2
 
-    assert (
-        records[0][
-            "model_version"
-        ]
-        == "test-version"
-    )
+    assert records[0]["model_version"] == "test-version"
 
-    assert (
-        records[1][
-            "input"
-        ][
-            "order_id"
-        ]
-        == "order-1"
-    )
+    assert records[1]["input"]["order_id"] == "order-1"
 
-    assert set(
-        records[1][
-            "input"
-        ].keys()
-    ) == {
+    assert set(records[1]["input"].keys()) == {
         "order_id",
         "feature_a",
     }
 
-    assert (
-        records[1][
-            "output"
-        ][
-            "late_probability"
-        ]
-        == pytest.approx(
-            0.2
-        )
-    )
+    assert records[1]["output"]["late_probability"] == pytest.approx(0.2)
 
-    assert (
-        records[2][
-            "output"
-        ][
-            "predicted_is_late"
-        ]
-        == 1
-    )
+    assert records[2]["output"]["predicted_is_late"] == 1
 
 
 def test_log_prediction_batch_rejects_row_count_mismatch(

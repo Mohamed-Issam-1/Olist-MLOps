@@ -5,7 +5,6 @@ from collections.abc import Sequence
 import numpy as np
 import pandas as pd
 
-
 FIXED_HOLIDAY_MONTH_DAYS = {
     (1, 1),
     (4, 21),
@@ -49,10 +48,7 @@ def _validate_engineering_columns(df: pd.DataFrame) -> None:
     engineering are available.
     """
 
-    missing_columns = (
-        REQUIRED_ENGINEERING_COLUMNS
-        - set(df.columns)
-    )
+    missing_columns = REQUIRED_ENGINEERING_COLUMNS - set(df.columns)
 
     if missing_columns:
         raise ValueError(
@@ -86,51 +82,24 @@ def engineer_features(df: pd.DataFrame) -> pd.DataFrame:
             errors="coerce",
         )
 
-    purchase_time = data[
-        "order_purchase_timestamp"
-    ]
+    purchase_time = data["order_purchase_timestamp"]
 
     # -------------------------
     # Time features
     # -------------------------
 
-    data[
-        "purchase_month"
-    ] = (
-        purchase_time
-        .dt.month
-        .astype("Int64")
-        .astype("string")
-    )
+    data["purchase_month"] = purchase_time.dt.month.astype("Int64").astype("string")
 
-    data[
-        "purchase_weekday"
-    ] = (
-        purchase_time
-        .dt.day_name()
-        .astype("string")
-    )
+    data["purchase_weekday"] = purchase_time.dt.day_name().astype("string")
 
-    data[
-        "purchase_hour"
-    ] = purchase_time.dt.hour
+    data["purchase_hour"] = purchase_time.dt.hour
 
-    data[
-        "estimated_delivery_days"
-    ] = (
-        data[
-            "order_estimated_delivery_date"
-        ]
-        - purchase_time
+    data["estimated_delivery_days"] = (
+        data["order_estimated_delivery_date"] - purchase_time
     ).dt.total_seconds() / 86400
 
-    data[
-        "approval_hours"
-    ] = (
-        data[
-            "order_approved_at"
-        ]
-        - purchase_time
+    data["approval_hours"] = (
+        data["order_approved_at"] - purchase_time
     ).dt.total_seconds() / 3600
 
     # -------------------------
@@ -144,17 +113,9 @@ def engineer_features(df: pd.DataFrame) -> pd.DataFrame:
         )
     )
 
-    data[
-        "is_fixed_national_holiday"
-    ] = [
-        int(
-            value
-            in FIXED_HOLIDAY_MONTH_DAYS
-        )
-        if not (
-            pd.isna(value[0])
-            or pd.isna(value[1])
-        )
+    data["is_fixed_national_holiday"] = [
+        int(value in FIXED_HOLIDAY_MONTH_DAYS)
+        if not (pd.isna(value[0]) or pd.isna(value[1]))
         else np.nan
         for value in month_day
     ]
@@ -163,19 +124,9 @@ def engineer_features(df: pd.DataFrame) -> pd.DataFrame:
     # Same customer/seller state
     # -------------------------
 
-    valid_states = (
-        data[
-            "customer_state"
-        ].notna()
-        &
-        data[
-            "primary_seller_state"
-        ].notna()
-    )
+    valid_states = data["customer_state"].notna() & data["primary_seller_state"].notna()
 
-    data[
-        "same_customer_seller_state"
-    ] = np.nan
+    data["same_customer_seller_state"] = np.nan
 
     data.loc[
         valid_states,
@@ -185,8 +136,7 @@ def engineer_features(df: pd.DataFrame) -> pd.DataFrame:
             valid_states,
             "customer_state",
         ]
-        ==
-        data.loc[
+        == data.loc[
             valid_states,
             "primary_seller_state",
         ]
@@ -196,70 +146,26 @@ def engineer_features(df: pd.DataFrame) -> pd.DataFrame:
     # Customer-seller distance
     # -------------------------
 
-    customer_lat = np.radians(
-        data[
-            "customer_lat"
-        ]
-    )
+    customer_lat = np.radians(data["customer_lat"])
 
-    customer_lng = np.radians(
-        data[
-            "customer_lng"
-        ]
-    )
+    customer_lng = np.radians(data["customer_lng"])
 
-    seller_lat = np.radians(
-        data[
-            "avg_seller_lat"
-        ]
-    )
+    seller_lat = np.radians(data["avg_seller_lat"])
 
-    seller_lng = np.radians(
-        data[
-            "avg_seller_lng"
-        ]
-    )
+    seller_lng = np.radians(data["avg_seller_lng"])
 
-    delta_lat = (
-        seller_lat
-        - customer_lat
-    )
+    delta_lat = seller_lat - customer_lat
 
-    delta_lng = (
-        seller_lng
-        - customer_lng
-    )
+    delta_lng = seller_lng - customer_lng
 
     a = (
-        np.sin(
-            delta_lat / 2
-        ) ** 2
-        +
-        np.cos(
-            customer_lat
-        )
-        *
-        np.cos(
-            seller_lat
-        )
-        *
-        np.sin(
-            delta_lng / 2
-        ) ** 2
+        np.sin(delta_lat / 2) ** 2
+        + np.cos(customer_lat) * np.cos(seller_lat) * np.sin(delta_lng / 2) ** 2
     )
 
-    c = (
-        2
-        * np.arcsin(
-            np.sqrt(a)
-        )
-    )
+    c = 2 * np.arcsin(np.sqrt(a))
 
-    data[
-        "customer_seller_distance_km"
-    ] = (
-        6371.0 * c
-    )
+    data["customer_seller_distance_km"] = 6371.0 * c
 
     return data
 
@@ -279,17 +185,12 @@ def select_model_features(
         *categorical_features,
     ]
 
-    missing_columns = [
-        column
-        for column in final_features
-        if column not in df.columns
-    ]
+    missing_columns = [column for column in final_features if column not in df.columns]
 
     if missing_columns:
         raise ValueError(
             "Cannot select model features. "
-            "Missing columns: "
-            + ", ".join(missing_columns)
+            "Missing columns: " + ", ".join(missing_columns)
         )
 
     return df.loc[

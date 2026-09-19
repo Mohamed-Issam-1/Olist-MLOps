@@ -13,9 +13,7 @@ class FakeMlflowClient:
         artifact_location=None,
     ):
         self.experiment = experiment
-        self.artifact_location = (
-            artifact_location
-        )
+        self.artifact_location = artifact_location
         self.created = []
         self.get_calls = []
 
@@ -44,15 +42,11 @@ class FakeMlflowClient:
             )
         )
 
-        self.experiment = (
-            SimpleNamespace(
-                experiment_id="42",
-                name=name,
-                artifact_location=(
-                    artifact_location
-                ),
-                lifecycle_stage="active",
-            )
+        self.experiment = SimpleNamespace(
+            experiment_id="42",
+            name=name,
+            artifact_location=(artifact_location),
+            lifecycle_stage="active",
         )
 
         return "42"
@@ -79,26 +73,12 @@ def make_settings(
     )
 
     return MlflowSettings(
-        backend_database=(
-            tmp_path
-            / "mlflow.db"
-        ),
-        artifact_directory=(
-            tmp_path
-            / "mlartifacts"
-        ),
-        experiment_name=(
-            "olist-late-delivery"
-        ),
-        registered_model_name=(
-            "olist-late-delivery"
-        ),
-        model_name=(
-            "inference_pipeline"
-        ),
-        production_alias=(
-            "champion"
-        ),
+        backend_database=(tmp_path / "mlflow.db"),
+        artifact_directory=(tmp_path / "mlartifacts"),
+        experiment_name=("olist-late-delivery"),
+        registered_model_name=("olist-late-delivery"),
+        model_name=("inference_pipeline"),
+        production_alias=("champion"),
     )
 
 
@@ -106,13 +86,9 @@ def test_ensure_experiment_creates_missing(
     monkeypatch,
     tmp_path,
 ):
-    settings = make_settings(
-        tmp_path
-    )
+    settings = make_settings(tmp_path)
 
-    fake_client = (
-        FakeMlflowClient()
-    )
+    fake_client = FakeMlflowClient()
 
     monkeypatch.setattr(
         tracking,
@@ -123,8 +99,7 @@ def test_ensure_experiment_creates_missing(
     monkeypatch.setattr(
         tracking,
         "get_mlflow_client",
-        lambda _settings:
-            fake_client,
+        lambda _settings: fake_client,
     )
 
     (
@@ -133,15 +108,9 @@ def test_ensure_experiment_creates_missing(
         experiment,
     ) = tracking.ensure_experiment()
 
-    assert (
-        returned_settings
-        == settings
-    )
+    assert returned_settings == settings
 
-    assert (
-        returned_client
-        is fake_client
-    )
+    assert returned_client is fake_client
 
     assert experiment.experiment_id == "42"
 
@@ -157,24 +126,16 @@ def test_ensure_experiment_reuses_existing(
     monkeypatch,
     tmp_path,
 ):
-    settings = make_settings(
-        tmp_path
-    )
+    settings = make_settings(tmp_path)
 
     existing = SimpleNamespace(
         experiment_id="7",
         name=settings.experiment_name,
-        artifact_location=(
-            settings.artifact_uri
-        ),
+        artifact_location=(settings.artifact_uri),
         lifecycle_stage="active",
     )
 
-    fake_client = (
-        FakeMlflowClient(
-            experiment=existing
-        )
-    )
+    fake_client = FakeMlflowClient(experiment=existing)
 
     monkeypatch.setattr(
         tracking,
@@ -185,8 +146,7 @@ def test_ensure_experiment_reuses_existing(
     monkeypatch.setattr(
         tracking,
         "get_mlflow_client",
-        lambda _settings:
-            fake_client,
+        lambda _settings: fake_client,
     )
 
     (
@@ -195,30 +155,20 @@ def test_ensure_experiment_reuses_existing(
         experiment,
     ) = tracking.ensure_experiment()
 
-    assert (
-        experiment.experiment_id
-        == "7"
-    )
+    assert experiment.experiment_id == "7"
 
-    assert (
-        fake_client.created
-        == []
-    )
+    assert fake_client.created == []
 
 
 def test_validate_experiment_rejects_wrong_artifact_location(
     tmp_path,
 ):
-    settings = make_settings(
-        tmp_path
-    )
+    settings = make_settings(tmp_path)
 
     experiment = SimpleNamespace(
         experiment_id="9",
         name=settings.experiment_name,
-        artifact_location=(
-            "file:///wrong/location"
-        ),
+        artifact_location=("file:///wrong/location"),
         lifecycle_stage="active",
     )
 
@@ -235,16 +185,12 @@ def test_validate_experiment_rejects_wrong_artifact_location(
 def test_validate_experiment_rejects_deleted_experiment(
     tmp_path,
 ):
-    settings = make_settings(
-        tmp_path
-    )
+    settings = make_settings(tmp_path)
 
     experiment = SimpleNamespace(
         experiment_id="9",
         name=settings.experiment_name,
-        artifact_location=(
-            settings.artifact_uri
-        ),
+        artifact_location=(settings.artifact_uri),
         lifecycle_stage="deleted",
     )
 
@@ -267,32 +213,14 @@ def test_get_mlflow_client_uses_registry_uri(
     )
 
     settings = MlflowSettings(
-        backend_database=(
-            tmp_path
-            / "mlflow.db"
-        ),
-        artifact_directory=(
-            tmp_path
-            / "mlartifacts"
-        ),
-        experiment_name=(
-            "olist-late-delivery"
-        ),
-        registered_model_name=(
-            "olist-late-delivery"
-        ),
-        model_name=(
-            "inference_pipeline"
-        ),
-        production_alias=(
-            "champion"
-        ),
-        tracking_uri_override=(
-            "http://tracking:5000"
-        ),
-        registry_uri_override=(
-            "http://registry:5000"
-        ),
+        backend_database=(tmp_path / "mlflow.db"),
+        artifact_directory=(tmp_path / "mlartifacts"),
+        experiment_name=("olist-late-delivery"),
+        registered_model_name=("olist-late-delivery"),
+        model_name=("inference_pipeline"),
+        production_alias=("champion"),
+        tracking_uri_override=("http://tracking:5000"),
+        registry_uri_override=("http://registry:5000"),
     )
 
     captured = {}
@@ -304,13 +232,9 @@ def test_get_mlflow_client_uses_registry_uri(
             tracking_uri,
             registry_uri,
         ):
-            captured[
-                "tracking_uri"
-            ] = tracking_uri
+            captured["tracking_uri"] = tracking_uri
 
-            captured[
-                "registry_uri"
-            ] = registry_uri
+            captured["registry_uri"] = registry_uri
 
     monkeypatch.setattr(
         tracking,
@@ -318,13 +242,9 @@ def test_get_mlflow_client_uses_registry_uri(
         CapturingClient,
     )
 
-    tracking.get_mlflow_client(
-        settings
-    )
+    tracking.get_mlflow_client(settings)
 
     assert captured == {
-        "tracking_uri":
-            "http://tracking:5000",
-        "registry_uri":
-            "http://registry:5000",
+        "tracking_uri": "http://tracking:5000",
+        "registry_uri": "http://registry:5000",
     }

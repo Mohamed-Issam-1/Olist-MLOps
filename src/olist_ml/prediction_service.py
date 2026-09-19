@@ -39,61 +39,34 @@ def get_prediction_input_columns(
     are intentionally excluded.
     """
 
-    feature_config = (
-        artifacts.feature_config
-    )
+    feature_config = artifacts.feature_config
 
     configured_features = [
-        *feature_config[
-            "numeric_features"
-        ],
-        *feature_config[
-            "categorical_features"
-        ],
+        *feature_config["numeric_features"],
+        *feature_config["categorical_features"],
     ]
 
     direct_features = [
-        feature
-        for feature in configured_features
-        if feature
-        not in ENGINEERED_FEATURES
+        feature for feature in configured_features if feature not in ENGINEERED_FEATURES
     ]
 
-    required_columns = list(
-        direct_features
-    )
+    required_columns = list(direct_features)
 
-    for column in sorted(
-        REQUIRED_ENGINEERING_COLUMNS
-    ):
-        if (
-            column
-            not in required_columns
-        ):
-            required_columns.append(
-                column
-            )
+    for column in sorted(REQUIRED_ENGINEERING_COLUMNS):
+        if column not in required_columns:
+            required_columns.append(column)
 
     missing_columns = [
-        column
-        for column in required_columns
-        if column
-        not in raw_orders.columns
+        column for column in required_columns if column not in raw_orders.columns
     ]
 
     if missing_columns:
         raise PredictionServiceError(
             "Prediction input is missing required "
-            "source columns: "
-            + ", ".join(
-                missing_columns
-            )
+            "source columns: " + ", ".join(missing_columns)
         )
 
-    if (
-        "order_id"
-        in raw_orders.columns
-    ):
+    if "order_id" in raw_orders.columns:
         return [
             "order_id",
             *required_columns,
@@ -115,78 +88,41 @@ def predict_orders_with_logging(
     testing.
     """
 
-    logger = get_logger(
-        "prediction_service"
-    )
+    logger = get_logger("prediction_service")
 
-    model_source = (
-        "mlflow-registry"
-    )
+    model_source = "mlflow-registry"
 
-    model_version = (
-        "unresolved"
-    )
+    model_version = "unresolved"
 
     start_time = perf_counter()
 
     try:
-        runtime_model = (
-            runtime_model
-            or load_registered_inference_model()
+        runtime_model = runtime_model or load_registered_inference_model()
+
+        model_source = runtime_model.source
+
+        model_version = runtime_model.version
+
+        predictions = runtime_model.predict(raw_orders)
+
+        latency_ms = (perf_counter() - start_time) * 1000
+
+        input_columns = get_prediction_input_columns(
+            raw_orders,
+            runtime_model.artifacts,
         )
 
-        model_source = (
-            runtime_model.source
+        request_id = log_prediction_batch(
+            raw_orders,
+            predictions,
+            input_columns=input_columns,
+            latency_ms=latency_ms,
+            model_type=(runtime_model.model_type),
+            model_version=(runtime_model.version),
+            threshold=(runtime_model.classification_threshold),
         )
 
-        model_version = (
-            runtime_model.version
-        )
-
-        predictions = (
-            runtime_model.predict(
-                raw_orders
-            )
-        )
-
-        latency_ms = (
-            perf_counter()
-            - start_time
-        ) * 1000
-
-        input_columns = (
-            get_prediction_input_columns(
-                raw_orders,
-                runtime_model.artifacts,
-            )
-        )
-
-        request_id = (
-            log_prediction_batch(
-                raw_orders,
-                predictions,
-                input_columns=input_columns,
-                latency_ms=latency_ms,
-                model_type=(
-                    runtime_model
-                    .model_type
-                ),
-                model_version=(
-                    runtime_model
-                    .version
-                ),
-                threshold=(
-                    runtime_model
-                    .classification_threshold
-                ),
-            )
-        )
-
-        late_prediction_count = int(
-            predictions[
-                "predicted_is_late"
-            ].sum()
-        )
+        late_prediction_count = int(predictions["predicted_is_late"].sum())
 
         logger.info(
             (
@@ -202,9 +138,7 @@ def predict_orders_with_logging(
                 "model_uri=%s"
             ),
             request_id,
-            len(
-                predictions
-            ),
+            len(predictions),
             late_prediction_count,
             latency_ms,
             runtime_model.model_type,
@@ -217,15 +151,10 @@ def predict_orders_with_logging(
         return predictions
 
     except Exception:
-        latency_ms = (
-            perf_counter()
-            - start_time
-        ) * 1000
+        latency_ms = (perf_counter() - start_time) * 1000
 
         request_size = (
-            len(
-                raw_orders
-            )
+            len(raw_orders)
             if hasattr(
                 raw_orders,
                 "__len__",

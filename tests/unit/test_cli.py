@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import json
-
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -14,10 +13,7 @@ import olist_ml.cli as cli
 def test_load_orders_reads_single_json(
     tmp_path,
 ):
-    input_path = (
-        tmp_path
-        / "order.json"
-    )
+    input_path = tmp_path / "order.json"
 
     input_path.write_text(
         json.dumps(
@@ -29,13 +25,9 @@ def test_load_orders_reads_single_json(
         encoding="utf-8",
     )
 
-    orders = cli.load_orders(
-        input_path
-    )
+    orders = cli.load_orders(input_path)
 
-    assert len(
-        orders
-    ) == 1
+    assert len(orders) == 1
 
     assert (
         orders.loc[
@@ -49,10 +41,7 @@ def test_load_orders_reads_single_json(
 def test_load_orders_reads_csv(
     tmp_path,
 ):
-    input_path = (
-        tmp_path
-        / "orders.csv"
-    )
+    input_path = tmp_path / "orders.csv"
 
     pd.DataFrame(
         [
@@ -70,22 +59,15 @@ def test_load_orders_reads_csv(
         index=False,
     )
 
-    orders = cli.load_orders(
-        input_path
-    )
+    orders = cli.load_orders(input_path)
 
-    assert len(
-        orders
-    ) == 2
+    assert len(orders) == 2
 
 
 def test_load_orders_rejects_unknown_format(
     tmp_path,
 ):
-    input_path = (
-        tmp_path
-        / "orders.txt"
-    )
+    input_path = tmp_path / "orders.txt"
 
     input_path.write_text(
         "invalid",
@@ -96,19 +78,14 @@ def test_load_orders_rejects_unknown_format(
         cli.CliError,
         match="Unsupported input format",
     ):
-        cli.load_orders(
-            input_path
-        )
+        cli.load_orders(input_path)
 
 
 def test_predict_file_uses_registry_model(
     monkeypatch,
     tmp_path,
 ):
-    input_path = (
-        tmp_path
-        / "order.json"
-    )
+    input_path = tmp_path / "order.json"
 
     input_path.write_text(
         json.dumps(
@@ -133,14 +110,9 @@ def test_predict_file_uses_registry_model(
         raw_orders,
         runtime_model,
     ):
-        assert len(
-            raw_orders
-        ) == 1
+        assert len(raw_orders) == 1
 
-        assert (
-            runtime_model.version
-            == "7"
-        )
+        assert runtime_model.version == "7"
 
         return pd.DataFrame(
             [
@@ -158,9 +130,7 @@ def test_predict_file_uses_registry_model(
         fake_predict,
     )
 
-    result = cli.predict_file(
-        input_path
-    )
+    result = cli.predict_file(input_path)
 
     assert (
         result.loc[
@@ -184,10 +154,7 @@ def test_main_writes_json_to_stdout(
     capsys,
     tmp_path,
 ):
-    input_path = (
-        tmp_path
-        / "order.json"
-    )
+    input_path = tmp_path / "order.json"
 
     input_path.write_text(
         "{}",
@@ -212,37 +179,19 @@ def test_main_writes_json_to_stdout(
     exit_code = cli.main(
         [
             "--input",
-            str(
-                input_path
-            ),
+            str(input_path),
         ]
     )
 
     captured = capsys.readouterr()
 
-    payload = json.loads(
-        captured.out
-    )
+    payload = json.loads(captured.out)
 
     assert exit_code == 0
 
-    assert (
-        payload[
-            0
-        ][
-            "order_id"
-        ]
-        == "order-1"
-    )
+    assert payload[0]["order_id"] == "order-1"
 
-    assert (
-        payload[
-            0
-        ][
-            "model_version"
-        ]
-        == "3"
-    )
+    assert payload[0]["model_version"] == "3"
 
 
 def test_main_returns_error_for_failure(
@@ -250,10 +199,7 @@ def test_main_returns_error_for_failure(
     capsys,
     tmp_path,
 ):
-    input_path = (
-        tmp_path
-        / "order.json"
-    )
+    input_path = tmp_path / "order.json"
 
     input_path.write_text(
         "{}",
@@ -263,9 +209,7 @@ def test_main_returns_error_for_failure(
     def fail_prediction(
         _path: Path,
     ):
-        raise cli.CliError(
-            "bad input"
-        )
+        raise cli.CliError("bad input")
 
     monkeypatch.setattr(
         cli,
@@ -276,9 +220,7 @@ def test_main_returns_error_for_failure(
     exit_code = cli.main(
         [
             "--input",
-            str(
-                input_path
-            ),
+            str(input_path),
         ]
     )
 
@@ -286,7 +228,4 @@ def test_main_returns_error_for_failure(
 
     assert exit_code == 1
 
-    assert (
-        "Prediction failed: bad input"
-        in captured.err
-    )
+    assert "Prediction failed: bad input" in captured.err

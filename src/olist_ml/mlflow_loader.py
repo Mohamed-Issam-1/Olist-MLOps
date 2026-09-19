@@ -46,26 +46,19 @@ class RegisteredInferenceModel:
     def model_type(
         self,
     ) -> str:
-        return type(
-            self.artifacts.model
-        ).__name__
+        return type(self.artifacts.model).__name__
 
     @property
     def classification_threshold(
         self,
     ) -> float:
-        return (
-            self.artifacts
-            .classification_threshold
-        )
+        return self.artifacts.classification_threshold
 
     def predict(
         self,
         raw_orders: pd.DataFrame,
     ) -> pd.DataFrame:
-        return self.pyfunc_model.predict(
-            raw_orders
-        )
+        return self.pyfunc_model.predict(raw_orders)
 
 
 def _load_registered_inference_model() -> RegisteredInferenceModel:
@@ -84,26 +77,18 @@ def _load_registered_inference_model() -> RegisteredInferenceModel:
     ) = ensure_experiment()
 
     try:
-        model_version = (
-            client
-            .get_model_version_by_alias(
-                settings.registered_model_name,
-                settings.production_alias,
-            )
+        model_version = client.get_model_version_by_alias(
+            settings.registered_model_name,
+            settings.production_alias,
         )
     except Exception as exc:
         raise MlflowModelLoadError(
-            "Could not resolve the configured "
-            "MLflow production model alias."
+            "Could not resolve the configured MLflow production model alias."
         ) from exc
 
-    version = str(
-        model_version.version
-    )
+    version = str(model_version.version)
 
-    run_id = str(
-        model_version.run_id
-    )
+    run_id = str(model_version.run_id)
 
     status = str(
         getattr(
@@ -119,33 +104,20 @@ def _load_registered_inference_model() -> RegisteredInferenceModel:
             f"Version={version}, status={status!r}."
         )
 
-    model_uri = (
-        "models:/"
-        f"{settings.registered_model_name}"
-        f"@{settings.production_alias}"
-    )
+    model_uri = f"models:/{settings.registered_model_name}@{settings.production_alias}"
 
     try:
-        pyfunc_model = (
-            mlflow.pyfunc.load_model(
-                model_uri
-            )
-        )
+        pyfunc_model = mlflow.pyfunc.load_model(model_uri)
     except Exception as exc:
         raise MlflowModelLoadError(
-            "Could not load the production model "
-            f"from MLflow: {model_uri}"
+            f"Could not load the production model from MLflow: {model_uri}"
         ) from exc
 
     try:
-        python_model = (
-            pyfunc_model
-            .unwrap_python_model()
-        )
+        python_model = pyfunc_model.unwrap_python_model()
     except Exception as exc:
         raise MlflowModelLoadError(
-            "Could not unwrap the registered "
-            "MLflow Python model."
+            "Could not unwrap the registered MLflow Python model."
         ) from exc
 
     if not isinstance(
@@ -159,21 +131,16 @@ def _load_registered_inference_model() -> RegisteredInferenceModel:
         )
 
     try:
-        artifacts = (
-            python_model.artifacts
-        )
+        artifacts = python_model.artifacts
     except Exception as exc:
         raise MlflowModelLoadError(
-            "Registered MLflow model did not load "
-            "its fitted inference artifacts."
+            "Registered MLflow model did not load its fitted inference artifacts."
         ) from exc
 
     return RegisteredInferenceModel(
         pyfunc_model=pyfunc_model,
         artifacts=artifacts,
-        registered_model_name=(
-            settings.registered_model_name
-        ),
+        registered_model_name=(settings.registered_model_name),
         version=version,
         alias=settings.production_alias,
         run_id=run_id,
@@ -182,15 +149,12 @@ def _load_registered_inference_model() -> RegisteredInferenceModel:
 
 
 @lru_cache(maxsize=1)
-def _get_cached_registered_inference_model(
-) -> RegisteredInferenceModel:
+def _get_cached_registered_inference_model() -> RegisteredInferenceModel:
     """
     Load the registry model once per application process.
     """
 
-    return (
-        _load_registered_inference_model()
-    )
+    return _load_registered_inference_model()
 
 
 def load_registered_inference_model(
@@ -205,23 +169,14 @@ def load_registered_inference_model(
     """
 
     if refresh:
-        (
-            _get_cached_registered_inference_model
-            .cache_clear()
-        )
+        (_get_cached_registered_inference_model.cache_clear())
 
-    return (
-        _get_cached_registered_inference_model()
-    )
+    return _get_cached_registered_inference_model()
 
 
-def clear_registered_inference_model_cache(
-) -> None:
+def clear_registered_inference_model_cache() -> None:
     """
     Clear the process-local production model cache.
     """
 
-    (
-        _get_cached_registered_inference_model
-        .cache_clear()
-    )
+    (_get_cached_registered_inference_model.cache_clear())

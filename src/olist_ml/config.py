@@ -5,7 +5,6 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
-
 CONFIG_RELATIVE_PATH = Path("config") / "config.json"
 
 REQUIRED_CONFIG_SECTIONS = {
@@ -90,9 +89,7 @@ def load_config() -> dict[str, Any]:
         ) from exc
 
     if not isinstance(config, dict):
-        raise ConfigurationError(
-            "The root configuration object must be a JSON object."
-        )
+        raise ConfigurationError("The root configuration object must be a JSON object.")
 
     missing_sections = REQUIRED_CONFIG_SECTIONS - set(config.keys())
 
@@ -168,20 +165,16 @@ def validate_artifact_paths() -> dict[str, Path]:
     artifact_paths = get_artifact_paths()
 
     missing = {
-        name: path
-        for name, path in artifact_paths.items()
-        if not path.is_file()
+        name: path for name, path in artifact_paths.items() if not path.is_file()
     }
 
     if missing:
         missing_details = "\n".join(
-            f"- {name}: {path}"
-            for name, path in missing.items()
+            f"- {name}: {path}" for name, path in missing.items()
         )
 
         raise FileNotFoundError(
-            "Required inference artifact files are missing:\n"
-            f"{missing_details}"
+            f"Required inference artifact files are missing:\n{missing_details}"
         )
 
     return artifact_paths

@@ -4,9 +4,9 @@ import pytest
 
 import olist_ml.config as config_module
 from olist_ml.config import (
-    ConfigurationError,
     REQUIRED_ARTIFACT_KEYS,
     REQUIRED_CONFIG_SECTIONS,
+    ConfigurationError,
     find_project_root,
     load_config,
     resolve_project_path,
@@ -31,15 +31,11 @@ def test_load_config_contains_required_sections():
 def test_load_config_contains_required_artifacts():
     config = load_config()
 
-    assert REQUIRED_ARTIFACT_KEYS.issubset(
-        config["artifacts"].keys()
-    )
+    assert REQUIRED_ARTIFACT_KEYS.issubset(config["artifacts"].keys())
 
 
 def test_resolve_project_path_returns_absolute_path():
-    resolved = resolve_project_path(
-        "artifacts/06_model/model_bundle.joblib"
-    )
+    resolved = resolve_project_path("artifacts/06_model/model_bundle.joblib")
 
     assert isinstance(resolved, Path)
     assert resolved.is_absolute()

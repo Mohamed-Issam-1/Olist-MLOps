@@ -18,11 +18,7 @@ class DummyModel:
         classes=None,
         probabilities=None,
     ):
-        self.classes_ = np.asarray(
-            classes
-            if classes is not None
-            else [0, 1]
-        )
+        self.classes_ = np.asarray(classes if classes is not None else [0, 1])
 
         self.probabilities = np.asarray(
             probabilities
@@ -65,19 +61,15 @@ def make_artifacts(
         },
         model_bundle={
             "model": model,
-            "classification_threshold":
-                threshold,
-            "model_type":
-                type(model).__name__,
+            "classification_threshold": threshold,
+            "model_type": type(model).__name__,
             "feature_count": 3,
         },
     )
 
 
 def test_predict_late_probabilities_selects_positive_class():
-    artifacts = (
-        make_artifacts()
-    )
+    artifacts = make_artifacts()
 
     transformed = np.zeros(
         (
@@ -86,12 +78,10 @@ def test_predict_late_probabilities_selects_positive_class():
         )
     )
 
-    result = (
-        predict_late_probabilities(
-            transformed,
-            artifacts,
-            positive_class=1,
-        )
+    result = predict_late_probabilities(
+        transformed,
+        artifacts,
+        positive_class=1,
     )
 
     np.testing.assert_allclose(
@@ -121,11 +111,7 @@ def test_predict_late_probabilities_handles_reversed_class_order():
         ],
     )
 
-    artifacts = (
-        make_artifacts(
-            model=model
-        )
-    )
+    artifacts = make_artifacts(model=model)
 
     transformed = np.zeros(
         (
@@ -134,12 +120,10 @@ def test_predict_late_probabilities_handles_reversed_class_order():
         )
     )
 
-    result = (
-        predict_late_probabilities(
-            transformed,
-            artifacts,
-            positive_class=1,
-        )
+    result = predict_late_probabilities(
+        transformed,
+        artifacts,
+        positive_class=1,
     )
 
     np.testing.assert_allclose(
@@ -159,11 +143,7 @@ def test_predict_late_probabilities_rejects_missing_positive_class():
         ]
     )
 
-    artifacts = (
-        make_artifacts(
-            model=model
-        )
-    )
+    artifacts = make_artifacts(model=model)
 
     with pytest.raises(
         InferenceError,
@@ -195,11 +175,7 @@ def test_predict_late_probabilities_rejects_invalid_values():
         ]
     )
 
-    artifacts = (
-        make_artifacts(
-            model=model
-        )
-    )
+    artifacts = make_artifacts(model=model)
 
     with pytest.raises(
         InferenceError,
@@ -218,15 +194,13 @@ def test_predict_late_probabilities_rejects_invalid_values():
 
 
 def test_threshold_comparison_is_inclusive():
-    result = (
-        apply_classification_threshold(
-            [
-                0.2,
-                0.4,
-                0.6,
-            ],
-            threshold=0.4,
-        )
+    result = apply_classification_threshold(
+        [
+            0.2,
+            0.4,
+            0.6,
+        ],
+        threshold=0.4,
     )
 
     np.testing.assert_array_equal(
@@ -268,11 +242,7 @@ def test_predict_orders_returns_expected_output(
         }
     )
 
-    artifacts = (
-        make_artifacts(
-            threshold=0.4
-        )
-    )
+    artifacts = make_artifacts(threshold=0.4)
 
     monkeypatch.setattr(
         inference_module,
@@ -283,25 +253,23 @@ def test_predict_orders_returns_expected_output(
     monkeypatch.setattr(
         inference_module,
         "transform_features",
-        lambda data, artifacts:
-            np.zeros(
-                (
-                    len(data),
-                    3,
-                )
-            ),
+        lambda data, artifacts: np.zeros(
+            (
+                len(data),
+                3,
+            )
+        ),
     )
 
     monkeypatch.setattr(
         inference_module,
         "predict_late_probabilities",
-        lambda *args, **kwargs:
-            np.asarray(
-                [
-                    0.25,
-                    0.75,
-                ]
-            ),
+        lambda *args, **kwargs: np.asarray(
+            [
+                0.25,
+                0.75,
+            ]
+        ),
     )
 
     result = predict_orders(
@@ -310,27 +278,19 @@ def test_predict_orders_returns_expected_output(
         positive_class=1,
     )
 
-    assert list(
-        result.columns
-    ) == [
+    assert list(result.columns) == [
         "order_id",
         "late_probability",
         "predicted_is_late",
     ]
 
-    assert list(
-        result[
-            "order_id"
-        ]
-    ) == [
+    assert list(result["order_id"]) == [
         "order-1",
         "order-2",
     ]
 
     np.testing.assert_allclose(
-        result[
-            "late_probability"
-        ],
+        result["late_probability"],
         [
             0.25,
             0.75,
@@ -338,9 +298,7 @@ def test_predict_orders_returns_expected_output(
     )
 
     np.testing.assert_array_equal(
-        result[
-            "predicted_is_late"
-        ],
+        result["predicted_is_late"],
         [
             0,
             1,

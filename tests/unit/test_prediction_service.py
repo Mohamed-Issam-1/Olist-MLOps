@@ -15,31 +15,19 @@ class FakeRuntimeModel:
         self,
         predictions=None,
     ):
-        self.source = (
-            "mlflow-registry"
-        )
+        self.source = "mlflow-registry"
 
         self.version = "1"
 
         self.alias = "champion"
 
-        self.model_uri = (
-            "models:/"
-            "olist-late-delivery"
-            "@champion"
-        )
+        self.model_uri = "models:/olist-late-delivery@champion"
 
-        self.model_type = (
-            "LogisticRegression"
-        )
+        self.model_type = "LogisticRegression"
 
-        self.classification_threshold = (
-            0.0822110764307922
-        )
+        self.classification_threshold = 0.0822110764307922
 
-        self.artifacts = (
-            DummyArtifacts()
-        )
+        self.artifacts = DummyArtifacts()
 
         self.predictions = (
             predictions
@@ -65,14 +53,9 @@ class FakeRuntimeModel:
         self,
         raw_orders,
     ):
-        self.predict_calls.append(
-            raw_orders
-        )
+        self.predict_calls.append(raw_orders)
 
-        return (
-            self.predictions
-            .copy()
-        )
+        return self.predictions.copy()
 
 
 def configure_logging_mocks(
@@ -83,13 +66,10 @@ def configure_logging_mocks(
     monkeypatch.setattr(
         service,
         "get_logger",
-        lambda name:
-            logger,
+        lambda name: logger,
     )
 
-    prediction_log = Mock(
-        return_value="request-1"
-    )
+    prediction_log = Mock(return_value="request-1")
 
     monkeypatch.setattr(
         service,
@@ -117,17 +97,11 @@ def test_prediction_service_loads_registry_model(
     (
         logger,
         prediction_log,
-    ) = configure_logging_mocks(
-        monkeypatch
-    )
+    ) = configure_logging_mocks(monkeypatch)
 
-    runtime_model = (
-        FakeRuntimeModel()
-    )
+    runtime_model = FakeRuntimeModel()
 
-    load_mock = Mock(
-        return_value=runtime_model
-    )
+    load_mock = Mock(return_value=runtime_model)
 
     monkeypatch.setattr(
         service,
@@ -143,12 +117,7 @@ def test_prediction_service_loads_registry_model(
         }
     )
 
-    result = (
-        service
-        .predict_orders_with_logging(
-            raw_orders
-        )
-    )
+    result = service.predict_orders_with_logging(raw_orders)
 
     pd.testing.assert_frame_equal(
         result,
@@ -157,52 +126,21 @@ def test_prediction_service_loads_registry_model(
 
     load_mock.assert_called_once_with()
 
-    assert (
-        runtime_model.predict_calls
-        == [
-            raw_orders
-        ]
-    )
+    assert runtime_model.predict_calls == [raw_orders]
 
     prediction_log.assert_called_once()
 
-    call_kwargs = (
-        prediction_log
-        .call_args
-        .kwargs
-    )
+    call_kwargs = prediction_log.call_args.kwargs
 
-    assert (
-        call_kwargs[
-            "model_type"
-        ]
-        == "LogisticRegression"
-    )
+    assert call_kwargs["model_type"] == "LogisticRegression"
 
-    assert (
-        call_kwargs[
-            "model_version"
-        ]
-        == "1"
-    )
+    assert call_kwargs["model_version"] == "1"
 
-    assert (
-        call_kwargs[
-            "threshold"
-        ]
-        == pytest.approx(
-            0.0822110764307922
-        )
-    )
+    assert call_kwargs["threshold"] == pytest.approx(0.0822110764307922)
 
-    assert (
-        call_kwargs[
-            "input_columns"
-        ]
-        == [
-            "order_id",
-        ]
-    )
+    assert call_kwargs["input_columns"] == [
+        "order_id",
+    ]
 
     logger.info.assert_called_once()
 
@@ -213,13 +151,9 @@ def test_prediction_service_accepts_injected_registry_model(
     (
         _logger,
         _prediction_log,
-    ) = configure_logging_mocks(
-        monkeypatch
-    )
+    ) = configure_logging_mocks(monkeypatch)
 
-    runtime_model = (
-        FakeRuntimeModel()
-    )
+    runtime_model = FakeRuntimeModel()
 
     load_mock = Mock()
 
@@ -229,25 +163,18 @@ def test_prediction_service_accepts_injected_registry_model(
         load_mock,
     )
 
-    result = (
-        service
-        .predict_orders_with_logging(
-            pd.DataFrame(
-                {
-                    "order_id": [
-                        "order-1",
-                    ]
-                }
-            ),
-            runtime_model=(
-                runtime_model
-            ),
-        )
+    result = service.predict_orders_with_logging(
+        pd.DataFrame(
+            {
+                "order_id": [
+                    "order-1",
+                ]
+            }
+        ),
+        runtime_model=(runtime_model),
     )
 
-    assert len(
-        result
-    ) == 1
+    assert len(result) == 1
 
     load_mock.assert_not_called()
 
@@ -260,14 +187,11 @@ def test_prediction_service_logs_registry_failure(
     monkeypatch.setattr(
         service,
         "get_logger",
-        lambda name:
-            logger,
+        lambda name: logger,
     )
 
     def fail_load():
-        raise RuntimeError(
-            "registry unavailable"
-        )
+        raise RuntimeError("registry unavailable")
 
     monkeypatch.setattr(
         service,
@@ -280,8 +204,7 @@ def test_prediction_service_logs_registry_failure(
         match="registry unavailable",
     ):
         (
-            service
-            .predict_orders_with_logging(
+            service.predict_orders_with_logging(
                 pd.DataFrame(
                     {
                         "order_id": [
@@ -294,22 +217,11 @@ def test_prediction_service_logs_registry_failure(
 
     logger.exception.assert_called_once()
 
-    log_args = (
-        logger
-        .exception
-        .call_args
-        .args
-    )
+    log_args = logger.exception.call_args.args
 
-    assert (
-        "mlflow-registry"
-        in log_args
-    )
+    assert "mlflow-registry" in log_args
 
-    assert (
-        "unresolved"
-        in log_args
-    )
+    assert "unresolved" in log_args
 
 
 def test_prediction_service_logs_resolved_version_on_prediction_failure(
@@ -320,32 +232,24 @@ def test_prediction_service_logs_resolved_version_on_prediction_failure(
     monkeypatch.setattr(
         service,
         "get_logger",
-        lambda name:
-            logger,
+        lambda name: logger,
     )
 
-    runtime_model = (
-        FakeRuntimeModel()
-    )
+    runtime_model = FakeRuntimeModel()
 
     def fail_prediction(
         raw_orders,
     ):
-        raise ValueError(
-            "bad input"
-        )
+        raise ValueError("bad input")
 
-    runtime_model.predict = (
-        fail_prediction
-    )
+    runtime_model.predict = fail_prediction
 
     with pytest.raises(
         ValueError,
         match="bad input",
     ):
         (
-            service
-            .predict_orders_with_logging(
+            service.predict_orders_with_logging(
                 pd.DataFrame(
                     {
                         "order_id": [
@@ -353,24 +257,14 @@ def test_prediction_service_logs_resolved_version_on_prediction_failure(
                         ]
                     }
                 ),
-                runtime_model=(
-                    runtime_model
-                ),
+                runtime_model=(runtime_model),
             )
         )
 
     logger.exception.assert_called_once()
 
-    log_args = (
-        logger
-        .exception
-        .call_args
-        .args
-    )
+    log_args = logger.exception.call_args.args
 
-    assert (
-        "mlflow-registry"
-        in log_args
-    )
+    assert "mlflow-registry" in log_args
 
     assert "1" in log_args

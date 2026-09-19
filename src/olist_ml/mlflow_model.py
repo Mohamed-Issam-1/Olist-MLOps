@@ -16,7 +16,6 @@ from olist_ml.inference import (
     predict_orders,
 )
 
-
 REQUIRED_MLFLOW_ARTIFACTS = {
     "preprocessor",
     "model_bundle",
@@ -32,28 +31,18 @@ class MlflowModelError(RuntimeError):
 def _load_json(
     path: str | Path,
 ) -> Any:
-    path = Path(
-        path
-    )
+    path = Path(path)
 
     try:
-        return json.loads(
-            path.read_text(
-                encoding="utf-8"
-            )
-        )
+        return json.loads(path.read_text(encoding="utf-8"))
     except (
         OSError,
         json.JSONDecodeError,
     ) as exc:
-        raise MlflowModelError(
-            f"Could not load MLflow JSON artifact: {path}"
-        ) from exc
+        raise MlflowModelError(f"Could not load MLflow JSON artifact: {path}") from exc
 
 
-class OlistLateDeliveryPythonModel(
-    mlflow.pyfunc.PythonModel
-):
+class OlistLateDeliveryPythonModel(mlflow.pyfunc.PythonModel):
     """
     End-to-end Olist late-delivery inference model.
 
@@ -73,10 +62,7 @@ class OlistLateDeliveryPythonModel(
     ) -> None:
         super().__init__()
 
-        self._artifacts: (
-            InferenceArtifacts
-            | None
-        ) = None
+        self._artifacts: InferenceArtifacts | None = None
 
     @property
     def artifacts(
@@ -110,56 +96,30 @@ class OlistLateDeliveryPythonModel(
             dict,
         ):
             raise MlflowModelError(
-                "MLflow model context does not contain "
-                "an artifact mapping."
+                "MLflow model context does not contain an artifact mapping."
             )
 
-        missing = (
-            REQUIRED_MLFLOW_ARTIFACTS
-            - set(
-                artifact_paths
-            )
-        )
+        missing = REQUIRED_MLFLOW_ARTIFACTS - set(artifact_paths)
 
         if missing:
             raise MlflowModelError(
                 "MLflow model is missing required artifacts: "
-                + ", ".join(
-                    sorted(
-                        missing
-                    )
-                )
+                + ", ".join(sorted(missing))
             )
 
         try:
-            preprocessor = joblib.load(
-                artifact_paths[
-                    "preprocessor"
-                ]
-            )
+            preprocessor = joblib.load(artifact_paths["preprocessor"])
 
-            model_bundle = joblib.load(
-                artifact_paths[
-                    "model_bundle"
-                ]
-            )
+            model_bundle = joblib.load(artifact_paths["model_bundle"])
 
         except Exception as exc:
             raise MlflowModelError(
                 "Could not load fitted MLflow inference artifacts."
             ) from exc
 
-        feature_names = _load_json(
-            artifact_paths[
-                "feature_names"
-            ]
-        )
+        feature_names = _load_json(artifact_paths["feature_names"])
 
-        feature_config = _load_json(
-            artifact_paths[
-                "feature_config"
-            ]
-        )
+        feature_config = _load_json(artifact_paths["feature_config"])
 
         artifacts = InferenceArtifacts(
             preprocessor=preprocessor,
@@ -169,15 +129,10 @@ class OlistLateDeliveryPythonModel(
         )
 
         try:
-            self._artifacts = (
-                validate_artifact_compatibility(
-                    artifacts
-                )
-            )
+            self._artifacts = validate_artifact_compatibility(artifacts)
         except Exception as exc:
             raise MlflowModelError(
-                "Packaged MLflow inference artifacts "
-                "are incompatible."
+                "Packaged MLflow inference artifacts are incompatible."
             ) from exc
 
     def predict(

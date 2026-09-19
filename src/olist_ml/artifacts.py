@@ -11,7 +11,6 @@ import joblib
 
 from olist_ml.config import validate_artifact_paths
 
-
 REQUIRED_FEATURE_CONFIG_KEYS = {
     "numeric_features",
     "categorical_features",
@@ -53,11 +52,7 @@ class InferenceArtifacts:
     def classification_threshold(self) -> float:
         """Return the saved classification threshold."""
 
-        return float(
-            self.model_bundle[
-                "classification_threshold"
-            ]
-        )
+        return float(self.model_bundle["classification_threshold"])
 
 
 def _load_json(path: Path) -> Any:
@@ -71,9 +66,7 @@ def _load_json(path: Path) -> Any:
             return json.load(file)
 
     except json.JSONDecodeError as exc:
-        raise ArtifactValidationError(
-            f"Invalid JSON artifact: {path}"
-        ) from exc
+        raise ArtifactValidationError(f"Invalid JSON artifact: {path}") from exc
 
 
 def validate_artifact_compatibility(
@@ -98,70 +91,44 @@ def validate_artifact_compatibility(
         feature_config,
         dict,
     ):
-        raise ArtifactValidationError(
-            "feature_config must be a dictionary."
-        )
+        raise ArtifactValidationError("feature_config must be a dictionary.")
 
     if not isinstance(
         model_bundle,
         dict,
     ):
-        raise ArtifactValidationError(
-            "model_bundle must be a dictionary."
-        )
+        raise ArtifactValidationError("model_bundle must be a dictionary.")
 
     if not (
         isinstance(feature_names, list)
-        and all(
-            isinstance(name, str)
-            for name in feature_names
-        )
+        and all(isinstance(name, str) for name in feature_names)
     ):
-        raise ArtifactValidationError(
-            "feature_names must be a list of strings."
-        )
+        raise ArtifactValidationError("feature_names must be a list of strings.")
 
-    missing_feature_config_keys = (
-        REQUIRED_FEATURE_CONFIG_KEYS
-        - set(feature_config.keys())
+    missing_feature_config_keys = REQUIRED_FEATURE_CONFIG_KEYS - set(
+        feature_config.keys()
     )
 
     if missing_feature_config_keys:
         raise ArtifactValidationError(
             "Missing feature configuration keys: "
-            + ", ".join(
-                sorted(
-                    missing_feature_config_keys
-                )
-            )
+            + ", ".join(sorted(missing_feature_config_keys))
         )
 
-    missing_model_bundle_keys = (
-        REQUIRED_MODEL_BUNDLE_KEYS
-        - set(model_bundle.keys())
-    )
+    missing_model_bundle_keys = REQUIRED_MODEL_BUNDLE_KEYS - set(model_bundle.keys())
 
     if missing_model_bundle_keys:
         raise ArtifactValidationError(
-            "Missing model bundle keys: "
-            + ", ".join(
-                sorted(
-                    missing_model_bundle_keys
-                )
-            )
+            "Missing model bundle keys: " + ", ".join(sorted(missing_model_bundle_keys))
         )
 
     # -------------------------
     # Raw feature compatibility
     # -------------------------
 
-    numeric_features = feature_config[
-        "numeric_features"
-    ]
+    numeric_features = feature_config["numeric_features"]
 
-    categorical_features = feature_config[
-        "categorical_features"
-    ]
+    categorical_features = feature_config["categorical_features"]
 
     if not isinstance(
         numeric_features,
@@ -171,8 +138,7 @@ def validate_artifact_compatibility(
         list,
     ):
         raise ArtifactValidationError(
-            "Numeric and categorical feature "
-            "definitions must be lists."
+            "Numeric and categorical feature definitions must be lists."
         )
 
     expected_raw_features = [
@@ -180,17 +146,11 @@ def validate_artifact_compatibility(
         *categorical_features,
     ]
 
-    configured_raw_count = feature_config[
-        "raw_feature_count"
-    ]
+    configured_raw_count = feature_config["raw_feature_count"]
 
-    if (
-        configured_raw_count
-        != len(expected_raw_features)
-    ):
+    if configured_raw_count != len(expected_raw_features):
         raise ArtifactValidationError(
-            "Raw feature count does not match "
-            "the configured feature lists."
+            "Raw feature count does not match the configured feature lists."
         )
 
     if not hasattr(
@@ -198,23 +158,14 @@ def validate_artifact_compatibility(
         "feature_names_in_",
     ):
         raise ArtifactValidationError(
-            "Preprocessor does not contain "
-            "feature_names_in_."
+            "Preprocessor does not contain feature_names_in_."
         )
 
-    preprocessor_input_features = [
-        str(name)
-        for name
-        in preprocessor.feature_names_in_
-    ]
+    preprocessor_input_features = [str(name) for name in preprocessor.feature_names_in_]
 
-    if (
-        preprocessor_input_features
-        != expected_raw_features
-    ):
+    if preprocessor_input_features != expected_raw_features:
         raise ArtifactValidationError(
-            "Preprocessor input feature order does "
-            "not match feature_config."
+            "Preprocessor input feature order does not match feature_config."
         )
 
     # -------------------------
@@ -226,78 +177,48 @@ def validate_artifact_compatibility(
         "get_feature_names_out",
     ):
         raise ArtifactValidationError(
-            "Preprocessor cannot provide "
-            "transformed feature names."
+            "Preprocessor cannot provide transformed feature names."
         )
 
     preprocessor_output_features = [
-        str(name)
-        for name
-        in preprocessor.get_feature_names_out()
+        str(name) for name in preprocessor.get_feature_names_out()
     ]
 
-    if (
-        preprocessor_output_features
-        != feature_names
-    ):
+    if preprocessor_output_features != feature_names:
         raise ArtifactValidationError(
-            "Saved feature_names do not match "
-            "the fitted preprocessor output."
+            "Saved feature_names do not match the fitted preprocessor output."
         )
 
     if not hasattr(
         model,
         "n_features_in_",
     ):
-        raise ArtifactValidationError(
-            "Model does not contain n_features_in_."
-        )
+        raise ArtifactValidationError("Model does not contain n_features_in_.")
 
     transformed_counts = {
-        int(
-            feature_config[
-                "transformed_feature_count"
-            ]
-        ),
+        int(feature_config["transformed_feature_count"]),
         len(feature_names),
         len(preprocessor_output_features),
-        int(
-            model_bundle[
-                "feature_count"
-            ]
-        ),
-        int(
-            model.n_features_in_
-        ),
+        int(model_bundle["feature_count"]),
+        int(model.n_features_in_),
     }
 
     if len(transformed_counts) != 1:
         raise ArtifactValidationError(
-            "Transformed feature counts are "
-            "inconsistent across artifacts."
+            "Transformed feature counts are inconsistent across artifacts."
         )
 
     # -------------------------
     # Model metadata
     # -------------------------
 
-    actual_model_type = (
-        type(model).__name__
-    )
+    actual_model_type = type(model).__name__
 
-    configured_model_type = (
-        model_bundle[
-            "model_type"
-        ]
-    )
+    configured_model_type = model_bundle["model_type"]
 
-    if (
-        actual_model_type
-        != configured_model_type
-    ):
+    if actual_model_type != configured_model_type:
         raise ArtifactValidationError(
-            "Model type metadata does not match "
-            "the loaded model object."
+            "Model type metadata does not match the loaded model object."
         )
 
     if not callable(
@@ -307,14 +228,9 @@ def validate_artifact_compatibility(
             None,
         )
     ):
-        raise ArtifactValidationError(
-            "Loaded model does not support "
-            "predict_proba()."
-        )
+        raise ArtifactValidationError("Loaded model does not support predict_proba().")
 
-    threshold = model_bundle[
-        "classification_threshold"
-    ]
+    threshold = model_bundle["classification_threshold"]
 
     if (
         isinstance(threshold, bool)
@@ -325,8 +241,7 @@ def validate_artifact_compatibility(
         or not 0 <= threshold <= 1
     ):
         raise ArtifactValidationError(
-            "Classification threshold must be "
-            "a number between 0 and 1."
+            "Classification threshold must be a number between 0 and 1."
         )
 
     return artifacts
@@ -343,29 +258,13 @@ def load_inference_artifacts() -> InferenceArtifacts:
 
     paths = validate_artifact_paths()
 
-    preprocessor = joblib.load(
-        paths[
-            "preprocessor"
-        ]
-    )
+    preprocessor = joblib.load(paths["preprocessor"])
 
-    model_bundle = joblib.load(
-        paths[
-            "model_bundle"
-        ]
-    )
+    model_bundle = joblib.load(paths["model_bundle"])
 
-    feature_names = _load_json(
-        paths[
-            "feature_names"
-        ]
-    )
+    feature_names = _load_json(paths["feature_names"])
 
-    feature_config = _load_json(
-        paths[
-            "feature_config"
-        ]
-    )
+    feature_config = _load_json(paths["feature_config"])
 
     artifacts = InferenceArtifacts(
         preprocessor=preprocessor,
@@ -374,6 +273,4 @@ def load_inference_artifacts() -> InferenceArtifacts:
         model_bundle=model_bundle,
     )
 
-    return validate_artifact_compatibility(
-        artifacts
-    )
+    return validate_artifact_compatibility(artifacts)

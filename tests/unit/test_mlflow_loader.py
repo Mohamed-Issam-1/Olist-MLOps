@@ -22,13 +22,9 @@ class FakePyfuncModel:
         python_model,
         prediction=None,
     ):
-        self.python_model = (
-            python_model
-        )
+        self.python_model = python_model
 
-        self.prediction = (
-            prediction
-        )
+        self.prediction = prediction
 
         self.predict_calls = []
 
@@ -41,9 +37,7 @@ class FakePyfuncModel:
         self,
         raw_orders,
     ):
-        self.predict_calls.append(
-            raw_orders
-        )
+        self.predict_calls.append(raw_orders)
 
         if self.prediction is None:
             return pd.DataFrame()
@@ -59,17 +53,11 @@ class FakeClient:
         status="READY",
         run_id="run-1",
     ):
-        self.version = (
-            version
-        )
+        self.version = version
 
-        self.status = (
-            status
-        )
+        self.status = status
 
-        self.run_id = (
-            run_id
-        )
+        self.run_id = run_id
 
         self.alias_calls = []
 
@@ -98,22 +86,16 @@ def make_artifacts():
         feature_names=[],
         feature_config={},
         model_bundle={
-            "model":
-                DummyModel(),
-            "classification_threshold":
-                0.4,
+            "model": DummyModel(),
+            "classification_threshold": 0.4,
         },
     )
 
 
 def make_python_model():
-    model = (
-        OlistLateDeliveryPythonModel()
-    )
+    model = OlistLateDeliveryPythonModel()
 
-    model._artifacts = (
-        make_artifacts()
-    )
+    model._artifacts = make_artifacts()
 
     return model
 
@@ -134,21 +116,15 @@ def configure_fake_registry(
     pyfunc_model=None,
 ):
     settings = SimpleNamespace(
-        registered_model_name=(
-            "olist-late-delivery"
-        ),
-        production_alias=(
-            "champion"
-        ),
+        registered_model_name=("olist-late-delivery"),
+        production_alias=("champion"),
     )
 
     if client is None:
         client = FakeClient()
 
     if pyfunc_model is None:
-        pyfunc_model = FakePyfuncModel(
-            make_python_model()
-        )
+        pyfunc_model = FakePyfuncModel(make_python_model())
 
     monkeypatch.setattr(
         loader,
@@ -165,9 +141,7 @@ def configure_fake_registry(
     def fake_load_model(
         model_uri,
     ):
-        load_calls.append(
-            model_uri
-        )
+        load_calls.append(model_uri)
 
         return pyfunc_model
 
@@ -191,54 +165,25 @@ def test_load_registered_model_resolves_alias(
         client,
         _pyfunc_model,
         load_calls,
-    ) = configure_fake_registry(
-        monkeypatch
-    )
+    ) = configure_fake_registry(monkeypatch)
 
-    result = (
-        loader
-        .load_registered_inference_model()
-    )
+    result = loader.load_registered_inference_model()
 
-    assert (
-        result.registered_model_name
-        == "olist-late-delivery"
-    )
+    assert result.registered_model_name == "olist-late-delivery"
 
     assert result.version == "1"
 
-    assert (
-        result.alias
-        == "champion"
-    )
+    assert result.alias == "champion"
 
     assert result.run_id == "run-1"
 
-    assert (
-        result.model_uri
-        == (
-            "models:/"
-            "olist-late-delivery"
-            "@champion"
-        )
-    )
+    assert result.model_uri == ("models:/olist-late-delivery@champion")
 
-    assert (
-        result.source
-        == "mlflow-registry"
-    )
+    assert result.source == "mlflow-registry"
 
-    assert (
-        result.model_type
-        == "DummyModel"
-    )
+    assert result.model_type == "DummyModel"
 
-    assert (
-        result.classification_threshold
-        == pytest.approx(
-            0.4
-        )
-    )
+    assert result.classification_threshold == pytest.approx(0.4)
 
     assert client.alias_calls == [
         (
@@ -247,13 +192,7 @@ def test_load_registered_model_resolves_alias(
         )
     ]
 
-    assert load_calls == [
-        (
-            "models:/"
-            "olist-late-delivery"
-            "@champion"
-        )
-    ]
+    assert load_calls == [("models:/olist-late-delivery@champion")]
 
 
 def test_registered_model_predict_delegates_to_pyfunc(
@@ -280,10 +219,7 @@ def test_registered_model_predict_delegates_to_pyfunc(
         pyfunc_model=pyfunc_model,
     )
 
-    runtime_model = (
-        loader
-        .load_registered_inference_model()
-    )
+    runtime_model = loader.load_registered_inference_model()
 
     raw_orders = pd.DataFrame(
         {
@@ -293,21 +229,14 @@ def test_registered_model_predict_delegates_to_pyfunc(
         }
     )
 
-    actual = runtime_model.predict(
-        raw_orders
-    )
+    actual = runtime_model.predict(raw_orders)
 
     pd.testing.assert_frame_equal(
         actual,
         expected,
     )
 
-    assert (
-        pyfunc_model.predict_calls
-        == [
-            raw_orders
-        ]
-    )
+    assert pyfunc_model.predict_calls == [raw_orders]
 
 
 def test_loader_rejects_non_ready_model(
@@ -315,19 +244,14 @@ def test_loader_rejects_non_ready_model(
 ):
     configure_fake_registry(
         monkeypatch,
-        client=FakeClient(
-            status="PENDING_REGISTRATION"
-        ),
+        client=FakeClient(status="PENDING_REGISTRATION"),
     )
 
     with pytest.raises(
         loader.MlflowModelLoadError,
         match="not READY",
     ):
-        (
-            loader
-            .load_registered_inference_model()
-        )
+        (loader.load_registered_inference_model())
 
 
 def test_loader_rejects_wrong_python_model(
@@ -335,21 +259,14 @@ def test_loader_rejects_wrong_python_model(
 ):
     configure_fake_registry(
         monkeypatch,
-        pyfunc_model=(
-            FakePyfuncModel(
-                object()
-            )
-        ),
+        pyfunc_model=(FakePyfuncModel(object())),
     )
 
     with pytest.raises(
         loader.MlflowModelLoadError,
         match="unexpected",
     ):
-        (
-            loader
-            .load_registered_inference_model()
-        )
+        (loader.load_registered_inference_model())
 
 
 def test_loader_uses_process_cache(
@@ -359,29 +276,17 @@ def test_loader_uses_process_cache(
         client,
         _pyfunc_model,
         load_calls,
-    ) = configure_fake_registry(
-        monkeypatch
-    )
+    ) = configure_fake_registry(monkeypatch)
 
-    first = (
-        loader
-        .load_registered_inference_model()
-    )
+    first = loader.load_registered_inference_model()
 
-    second = (
-        loader
-        .load_registered_inference_model()
-    )
+    second = loader.load_registered_inference_model()
 
     assert first is second
 
-    assert len(
-        client.alias_calls
-    ) == 1
+    assert len(client.alias_calls) == 1
 
-    assert len(
-        load_calls
-    ) == 1
+    assert len(load_calls) == 1
 
 
 def test_refresh_reloads_alias(
@@ -391,29 +296,17 @@ def test_refresh_reloads_alias(
         client,
         _pyfunc_model,
         load_calls,
-    ) = configure_fake_registry(
-        monkeypatch
-    )
+    ) = configure_fake_registry(monkeypatch)
 
-    first = (
-        loader
-        .load_registered_inference_model()
-    )
+    first = loader.load_registered_inference_model()
 
     client.version = "2"
     client.run_id = "run-2"
 
-    second = (
-        loader
-        .load_registered_inference_model(
-            refresh=True
-        )
-    )
+    second = loader.load_registered_inference_model(refresh=True)
 
     assert first.version == "1"
     assert second.version == "2"
     assert second.run_id == "run-2"
 
-    assert len(
-        load_calls
-    ) == 2
+    assert len(load_calls) == 2

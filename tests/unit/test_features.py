@@ -13,33 +13,15 @@ from olist_ml.features import (
 def make_order_dataframe() -> pd.DataFrame:
     return pd.DataFrame(
         {
-            "order_purchase_timestamp": [
-                "2017-09-07 10:30:00"
-            ],
-            "order_approved_at": [
-                "2017-09-07 12:30:00"
-            ],
-            "order_estimated_delivery_date": [
-                "2017-09-17 10:30:00"
-            ],
-            "customer_state": [
-                "SP"
-            ],
-            "primary_seller_state": [
-                "SP"
-            ],
-            "customer_lat": [
-                0.0
-            ],
-            "customer_lng": [
-                0.0
-            ],
-            "avg_seller_lat": [
-                0.0
-            ],
-            "avg_seller_lng": [
-                1.0
-            ],
+            "order_purchase_timestamp": ["2017-09-07 10:30:00"],
+            "order_approved_at": ["2017-09-07 12:30:00"],
+            "order_estimated_delivery_date": ["2017-09-17 10:30:00"],
+            "customer_state": ["SP"],
+            "primary_seller_state": ["SP"],
+            "customer_lat": [0.0],
+            "customer_lng": [0.0],
+            "avg_seller_lat": [0.0],
+            "avg_seller_lng": [1.0],
         }
     )
 
@@ -58,20 +40,29 @@ def test_engineer_features_calculates_time_features():
 
     result = engineer_features(data)
 
-    assert result.loc[
-        0,
-        "purchase_month",
-    ] == "9"
+    assert (
+        result.loc[
+            0,
+            "purchase_month",
+        ]
+        == "9"
+    )
 
-    assert result.loc[
-        0,
-        "purchase_weekday",
-    ] == "Thursday"
+    assert (
+        result.loc[
+            0,
+            "purchase_weekday",
+        ]
+        == "Thursday"
+    )
 
-    assert result.loc[
-        0,
-        "purchase_hour",
-    ] == 10
+    assert (
+        result.loc[
+            0,
+            "purchase_hour",
+        ]
+        == 10
+    )
 
     assert result.loc[
         0,
@@ -179,11 +170,7 @@ def test_engineer_features_preserves_missing_coordinates():
 def test_engineer_features_rejects_missing_required_column():
     data = make_order_dataframe()
 
-    data = data.drop(
-        columns=[
-            "avg_seller_lng"
-        ]
-    )
+    data = data.drop(columns=["avg_seller_lng"])
 
     with pytest.raises(
         ValueError,
@@ -212,9 +199,7 @@ def test_select_model_features_preserves_requested_order():
         ],
     )
 
-    assert list(
-        result.columns
-    ) == [
+    assert list(result.columns) == [
         "number_a",
         "number_b",
         "category",

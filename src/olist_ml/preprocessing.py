@@ -26,26 +26,13 @@ def prepare_raw_model_features(
     when the fitted preprocessor was trained.
     """
 
-    artifacts = (
-        artifacts
-        or load_inference_artifacts()
-    )
+    artifacts = artifacts or load_inference_artifacts()
 
-    feature_config = (
-        artifacts.feature_config
-    )
+    feature_config = artifacts.feature_config
 
-    numeric_features = (
-        feature_config[
-            "numeric_features"
-        ]
-    )
+    numeric_features = feature_config["numeric_features"]
 
-    categorical_features = (
-        feature_config[
-            "categorical_features"
-        ]
-    )
+    categorical_features = feature_config["categorical_features"]
 
     return select_model_features(
         engineered_data,
@@ -66,32 +53,18 @@ def transform_features(
     refits preprocessing objects during inference.
     """
 
-    artifacts = (
-        artifacts
-        or load_inference_artifacts()
+    artifacts = artifacts or load_inference_artifacts()
+
+    raw_features = prepare_raw_model_features(
+        engineered_data,
+        artifacts,
     )
 
-    raw_features = (
-        prepare_raw_model_features(
-            engineered_data,
-            artifacts,
-        )
-    )
+    transformed = artifacts.preprocessor.transform(raw_features)
 
-    transformed = (
-        artifacts.preprocessor.transform(
-            raw_features
-        )
-    )
+    expected_feature_count = len(artifacts.feature_names)
 
-    expected_feature_count = len(
-        artifacts.feature_names
-    )
-
-    if (
-        transformed.shape[1]
-        != expected_feature_count
-    ):
+    if transformed.shape[1] != expected_feature_count:
         raise PreprocessingError(
             "Transformed feature count does not "
             "match the saved feature metadata. "
@@ -99,20 +72,12 @@ def transform_features(
             f"got {transformed.shape[1]}."
         )
 
-    if sparse.issparse(
-        transformed
-    ):
+    if sparse.issparse(transformed):
         values = transformed.data
     else:
-        values = np.asarray(
-            transformed
-        )
+        values = np.asarray(transformed)
 
-    if not np.all(
-        np.isfinite(values)
-    ):
-        raise PreprocessingError(
-            "Preprocessing produced NaN or infinite values."
-        )
+    if not np.all(np.isfinite(values)):
+        raise PreprocessingError("Preprocessing produced NaN or infinite values.")
 
     return transformed
