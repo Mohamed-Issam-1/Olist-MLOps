@@ -1,9 +1,12 @@
 from __future__ import annotations
 
+from time import perf_counter
+
 import pandas as pd
 from fastapi import (
     FastAPI,
     HTTPException,
+    Request,
     status,
 )
 
@@ -12,6 +15,7 @@ from app.schemas import (
     BatchPredictionResponse,
     HealthResponse,
     ModelInfoResponse,
+    MonitoringResponse,
     OrderPredictionRequest,
     PredictionResponse,
 )
@@ -21,6 +25,10 @@ from olist_ml.config import (
 from olist_ml.mlflow_loader import (
     MlflowModelLoadError,
     load_registered_inference_model,
+)
+from olist_ml.monitoring import (
+    build_monitoring_summary,
+    log_api_request,
 )
 from olist_ml.prediction_service import (
     PredictionServiceError,
@@ -68,6 +76,52 @@ app = FastAPI(
 )
 
 
+@app.middleware("http")
+async def monitor_prediction_requests(
+    request: Request,
+    call_next,
+):
+    """
+    Record latency and HTTP status for prediction API calls.
+
+    Monitoring failures must never change inference behavior.
+    """
+
+    start_time = perf_counter()
+
+    try:
+        response = await call_next(request)
+
+    except Exception:
+        latency_ms = (perf_counter() - start_time) * 1000
+
+        try:
+            log_api_request(
+                method=request.method,
+                path=request.url.path,
+                status_code=500,
+                latency_ms=latency_ms,
+            )
+        except Exception:
+            pass
+
+        raise
+
+    latency_ms = (perf_counter() - start_time) * 1000
+
+    try:
+        log_api_request(
+            method=request.method,
+            path=request.url.path,
+            status_code=response.status_code,
+            latency_ms=latency_ms,
+        )
+    except Exception:
+        pass
+
+    return response
+
+
 def _load_production_model():
     """
     Load the currently configured MLflow production model
@@ -103,6 +157,21 @@ def health_check() -> HealthResponse:
         service=str(SERVICE_CONFIG["name"]),
         api_version=str(SERVICE_CONFIG["api_version"]),
     )
+
+
+@app.get(
+    "/monitoring",
+    response_model=MonitoringResponse,
+    tags=["Service"],
+    summary="Return runtime monitoring metrics",
+)
+def monitoring_summary() -> MonitoringResponse:
+    """
+    Return request, latency, error, prediction,
+    drift, and alert metrics from runtime logs.
+    """
+
+    return MonitoringResponse.model_validate(build_monitoring_summary())
 
 
 @app.get(

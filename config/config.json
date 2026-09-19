@@ -37,5 +37,23 @@
     "registered_model_name": "olist-late-delivery",
     "model_name": "inference_pipeline",
     "production_alias": "champion"
+  },
+  "monitoring": {
+    "request_log": "requests.jsonl",
+    "minimum_predictions_for_drift": 30,
+    "baseline": {
+      "prediction_count": 14471,
+      "predicted_late_rate": 0.2048234399834151,
+      "mean_late_probability": 0.05929370779772134,
+      "std_late_probability": 0.045062611275879995
+    },
+    "drift_thresholds": {
+      "predicted_late_rate_absolute_delta": 0.1,
+      "mean_late_probability_absolute_delta": 0.03
+    },
+    "alert_thresholds": {
+      "error_rate": 0.05,
+      "average_latency_ms": 500.0
+    }
   }
 }

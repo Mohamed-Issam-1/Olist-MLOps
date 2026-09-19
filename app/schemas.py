@@ -201,3 +201,109 @@ class BatchPredictionResponse(BaseModel):
     model_version: str = Field(description=("Resolved MLflow Registry model version."))
 
     predictions: list[PredictionResponse] = Field(min_length=1)
+
+
+class MonitoringRequestMetrics(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    request_count: int = Field(ge=0)
+    error_count: int = Field(ge=0)
+    error_rate: float = Field(ge=0.0, le=1.0)
+
+    average_latency_ms: float | None = Field(
+        default=None,
+        ge=0.0,
+    )
+
+    p95_latency_ms: float | None = Field(
+        default=None,
+        ge=0.0,
+    )
+
+    max_latency_ms: float | None = Field(
+        default=None,
+        ge=0.0,
+    )
+
+
+class MonitoringPredictionMetrics(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    prediction_count: int = Field(ge=0)
+    predicted_late_count: int = Field(ge=0)
+    predicted_on_time_count: int = Field(ge=0)
+
+    predicted_late_rate: float | None = Field(
+        default=None,
+        ge=0.0,
+        le=1.0,
+    )
+
+    mean_late_probability: float | None = Field(
+        default=None,
+        ge=0.0,
+        le=1.0,
+    )
+
+
+class MonitoringDriftMetrics(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    status: Literal[
+        "insufficient_data",
+        "stable",
+        "drift_detected",
+    ]
+
+    minimum_predictions: int = Field(ge=1)
+    baseline_prediction_count: int = Field(ge=1)
+
+    baseline_predicted_late_rate: float = Field(
+        ge=0.0,
+        le=1.0,
+    )
+
+    baseline_mean_late_probability: float = Field(
+        ge=0.0,
+        le=1.0,
+    )
+
+    predicted_late_rate_absolute_delta: float | None = Field(
+        default=None,
+        ge=0.0,
+    )
+
+    mean_late_probability_absolute_delta: float | None = Field(
+        default=None,
+        ge=0.0,
+    )
+
+    predicted_late_rate_threshold: float = Field(
+        ge=0.0,
+    )
+
+    mean_late_probability_threshold: float = Field(
+        ge=0.0,
+    )
+
+
+class MonitoringInvalidLogRecords(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    requests: int = Field(ge=0)
+    predictions: int = Field(ge=0)
+
+
+class MonitoringResponse(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    status: Literal[
+        "ok",
+        "alert",
+    ]
+
+    requests: MonitoringRequestMetrics
+    predictions: MonitoringPredictionMetrics
+    drift: MonitoringDriftMetrics
+    alerts: list[str]
+    invalid_log_records: MonitoringInvalidLogRecords

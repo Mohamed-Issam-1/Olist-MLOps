@@ -146,6 +146,9 @@ services:
     ports:
       - "8000:8000"
 
+    volumes:
+      - api_logs:/app/logs
+
     healthcheck:
       test:
         [
@@ -162,6 +165,7 @@ services:
     restart: unless-stopped
 
 volumes:
+  api_logs:
   postgres_data:
   mlflow_db_data:
   mlflow_artifacts:
